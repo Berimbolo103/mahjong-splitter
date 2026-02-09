@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mahjong & Bill Splitter (Exact Cents • Local)</title>
+  <style>
+    :root {
+      --pad: 14px;
+      --radius: 14px;
+      --bg: #f6f7fb;
+      --card: #fff;
+      --text: #111;
+      --muted: rgba(0,0,0,.6);
+      --line: #eef1f8;
+      --border: #e2e5ef;
+      --warnbg: #fff3cd;
+      --warnbd: #ffe69c;
+      --warnfg: #664d03;
+    }
+
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    header {
+      padding: 14px 16px;
+      background:#111;
+      color:#fff;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding-top: calc(14px + env(safe-area-inset-top));
+    }
+    header h1 { margin: 0; font-size: 16px; }
+    header p { margin: 6px 0 0; opacity:.8; font-size: 12px; }
+
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px; display: grid; gap: 12px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    }
+    .card h2 { margin: 0 0 10px; font-size: 15px; }
+    .muted { font-size: 12px; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); }
+
+    label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
+
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background:#fff;
+      font-size: 16px; /* iOS: prevent zoom on focus */
+    }
+
+    button {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background:#111;
+      color:#fff;
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 15px;
+      min-height: 44px;
+    }
+    button.secondary { background:#fff; color:#111; }
+    button.danger { background:#c62828; border-color:#c62828; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+
+    .hr { height:1px; background: var(--line); margin: 12px 0; }
+
+    .chips { display:flex; flex-wrap:wrap; gap: 10px; }
+    .chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 12px;
+      cursor:pointer;
+      user-select:none;
+      font-size: 14px;
+      background:#fff;
+      min-height: 40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .chip.active { background:#111; color:#fff; border-color:#111; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .row4 { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 720px) {
+      .row3 { grid-template-columns: 1fr 1fr 1fr; }
+      .row4 { grid-template-columns: 1.2fr .8fr 1fr 1fr; }
+    }
+
+    .twoBtns { display:flex; gap:10px; flex-wrap: wrap; }
+    @media (max-width: 560px) {
+      .twoBtns button { flex: 1; }
+    }
+
+    .pill { font-size: 12px; padding: 4px 8px; border-radius: 999px; background:#f1f3fa; display:inline-block; }
+
+    .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+    table { width:100%; border-collapse: collapse; min-width: 520px; }
+    th, td { text-align:left; font-size: 13px; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; color: var(--muted); }
+    .right { text-align:right; }
+    table.smallMin { min-width: 420px; }
+
+    .banner {
+      margin: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--warnbg);
+      border: 1px solid var(--warnbd);
+      color: var(--warnfg);
+      display: none;
+    }
+    .banner b { color: #3b2f00; }
+    .banner .twoBtns { margin-top: 10px; }
+    .small { font-size: 12px; opacity: .9; }
+
+    .kbd { font-family: ui-monospace, Menlo, Consolas, monospace; background: rgba(0,0,0,.08); padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Mahjong & Bill Splitter (Exact Cents • Local)</h1>
+  <p>Offline + history (IndexedDB) • Multi-losers → Multi-winners • Exact cents math</p>
+</header>
+
+<!-- In-app browser / preview warning -->
+<div id="inappBanner" class="banner">
+  <div><b>Heads up:</b> You’re viewing this inside a chat app preview (Telegram/WhatsApp/etc).</div>
+  <div class="small" style="margin-top:6px;">
+    These previews often break storage (history) and sometimes JS. For best results, open in <b>Safari</b> and optionally <b>Add to Home Screen</b>.
+  </div>
+  <div class="twoBtns">
+    <button id="copyLinkBtn" class="secondary">Copy help steps</button>
+    <button id="exportNowBtn" class="secondary">Export JSON now</button>
+  </div>
+  <div class="small" style="margin-top:8px;">
+    If you can’t “Open in Safari”, the only reliable way is to use a hosted link (GitHub Pages/Cloudflare Pages) or a local server app.
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="card">
+      <h2>1) Session setup</h2>
+      <div class="row2">
+        <div>
+          <label>Session name</label>
+          <input id="sessionName" placeholder="e.g. Sunday Mahjong @ Dex house" />
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="sessionDate" type="date" />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div>
+        <label>People (tap to mark “present”)</label>
+        <div id="peopleChips" class="chips"></div>
+        <p class="muted">Add extra names on the right (Manage people).</p>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>2) Food / Order items</h2>
+      <div class="row4">
+        <div>
+          <label>Item</label>
+          <input id="itemDesc" placeholder="e.g. BBQ stingray" />
+        </div>
+        <div>
+          <label>Amount</label>
+          <input id="itemAmount" inputmode="decimal" placeholder="0.00" />
+        </div>
+        <div>
+          <label>Paid by</label>
+          <select id="itemPaidBy"></select>
+        </div>
+        <div>
+          <label>Split among</label>
+          <select id="itemSplitMode">
+            <option value="present">All present</option>
+            <option value="custom">Pick people</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="customSplitWrap" style="margin-top:10px; display:none;">
+        <div class="muted" style="margin-bottom:6px;">Pick who shares this item:</div>
+        <div id="customSplitChips" class="chips"></div>
+      </div>
+
+      <div class="twoBtns" style="margin-top:10px;">
+        <button id="addItemBtn">Add item</button>
+        <button id="clearItemBtn" class="secondary">Clear</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>3) Mahjong transfers (A pays B)</h2>
+      <div class="row3">
+        <div>
+          <label>Loser (pays)</label>
+          <select id="mjLoser"></select>
+        </div>
+        <div>
+          <label>Winner (receives)</label>
+          <select id="mjWinner"></select>
+        </div>
+        <div>
+          <label>Amount</label>
+          <input id="mjAmount" inputmode="decimal" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="twoBtns" style="margin-top:10px;">
+        <button id="addMjBtn">Add transfer</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2 style="margin-bottom:6px;">3b) Multi-losers → Multi-winners (one total amount)</h2>
+      <p class="muted" style="margin-top:0;">
+        Split total among losers and winners (exact cents), then auto-generate minimal transfers.
+      </p>
+
+      <div class="row2">
+        <div>
+          <label>Total amount (overall)</label>
+          <input id="mjMultiTotal" inputmode="decimal" placeholder="0.00" />
+        </div>
+        <div>
+          <label>Quick set</label>
+          <select id="mjMultiQuick">
+            <option value="none">—</option>
+            <option value="reset">Clear losers & winners</option>
+            <option value="allWinners">Winners = all present</option>
+            <option value="allLosers">Losers = all present</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="muted" style="margin-bottom:6px;">Pick losers (payers):</div>
+        <div id="mjLosersChips" class="chips"></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="muted" style="margin-bottom:6px;">Pick winners (receivers):</div>
+        <div id="mjMultiWinnersChips" class="chips"></div>
+      </div>
+
+      <div class="twoBtns" style="margin-top:10px;">
+        <button id="addMjMultiBtn">Add multi split</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>4) Current session entries</h2>
+      <div class="row2">
+        <div>
+          <div class="muted">Food / items</div>
+          <div class="tableWrap">
+            <table id="itemsTable" class="smallMin"></table>
+          </div>
+        </div>
+        <div>
+          <div class="muted">Mahjong</div>
+          <div class="tableWrap">
+            <table id="mjTable" class="smallMin"></table>
+          </div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="twoBtns">
+        <button id="saveSessionBtn">Save session</button>
+        <button id="newSessionBtn" class="secondary">New session</button>
+        <button id="deleteSessionBtn" class="danger" disabled>Delete loaded session</button>
+      </div>
+      <p class="muted">
+        Note: chat-app previews may not keep history reliably. Use Export/Import JSON as backup.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div class="muted">Net balance: positive = should receive, negative = should pay</div>
+      <div class="tableWrap">
+        <table id="balancesTable"></table>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>Minimal settlement</h2>
+      <div class="muted">Fewer payments (exact cents).</div>
+      <div class="tableWrap">
+        <table id="settlementTable"></table>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>Sanity check</h2>
+      <div class="mono" id="sanity"></div>
+
+      <div class="hr"></div>
+
+      <h2>History (local)</h2>
+      <div class="row2">
+        <div>
+          <label>Load a saved session</label>
+          <select id="historySelect"></select>
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:10px;">
+          <button id="loadSessionBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>Manage people</h2>
+      <div class="row2">
+        <div>
+          <label>Add name</label>
+          <input id="newPersonName" placeholder="e.g. Shawn" />
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:10px;">
+          <button id="addPersonBtn" class="secondary">Add</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>Backup</h2>
+      <div class="twoBtns">
+        <button id="exportBtn" class="secondary">Export JSON</button>
+        <button id="importBtn" class="secondary">Import JSON</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none;" />
+      </div>
+      <p class="mono" id="dbStatus"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function uuid() {
+    return (crypto?.randomUUID?.() || ("id-" + Math.random().toString(16).slice(2) + Date.now()));
+  }
+
+  function parseMoneyToCents(raw) {
+    const s = String(raw ?? "").trim();
+    if (!s) return null;
+    const cleaned = s.replace(/\$/g, "").replace(/,/g, "");
+    if (!/^\d+(\.\d{0,2})?$/.test(cleaned)) return null;
+    const [a, b=""] = cleaned.split(".");
+    const cents = Number(a) * 100 + Number((b + "00").slice(0,2));
+    if (!Number.isFinite(cents)) return null;
+    return cents;
+  }
+
+  function centsToMoney(cents) {
+    const sign = cents < 0 ? "-" : "";
+    const abs = Math.abs(cents);
+    const dollars = Math.floor(abs / 100);
+    const rem = abs % 100;
+    return `${sign}$${dollars}.${String(rem).padStart(2,"0")}`;
+  }
+
+  function splitCentsEvenly(totalCents, namesSorted) {
+    const n = namesSorted.length;
+    const base = Math.floor(totalCents / n);
+    const r = totalCents % n;
+    const shares = new Map();
+    namesSorted.forEach((name, idx) => {
+      shares.set(name, base + (idx < r ? 1 : 0));
+    });
+    return shares;
+  }
+
+  function computeSettlementCents(net) {
+    const creditors = [];
+    const debtors = [];
+    for (const [name, cents] of Object.entries(net)) {
+      if (cents > 0) creditors.push([name, cents]);
+      else if (cents < 0) debtors.push([name, -cents]);
+    }
+    creditors.sort((a,b)=>b[1]-a[1]);
+    debtors.sort((a,b)=>b[1]-a[1]);
+
+    const tx = [];
+    let i=0, j=0;
+    while (i < debtors.length && j < creditors.length) {
+      const [dName, dAmt] = debtors[i];
+      const [cName, cAmt] = creditors[j];
+      const pay = Math.min(dAmt, cAmt);
+      if (pay > 0) tx.push({ from: dName, to: cName, cents: pay });
+      debtors[i][1] = dAmt - pay;
+      creditors[j][1] = cAmt - pay;
+      if (debtors[i][1] === 0) i++;
+      if (creditors[j][1] === 0) j++;
+    }
+    return tx;
+  }
+
+  // Detect in-app browsers (not perfect, but good enough)
+  function detectInAppBrowser() {
+    const ua = navigator.userAgent || "";
+    const isTelegram = ua.includes("Telegram");
+    const isWhatsApp = ua.includes("WhatsApp");
+    const isFB = ua.includes("FBAN") || ua.includes("FBAV") || ua.includes("Instagram");
+    const isLine = ua.includes("Line/");
+    const isWeChat = ua.includes("MicroMessenger");
+    return isTelegram || isWhatsApp || isFB || isLine || isWeChat;
+  }
+
+  // -------------------------
+  // IndexedDB
+  // -------------------------
+  const DB_NAME = "mahjong_splitter_db";
+  const DB_VERSION = 1;
+  const STORE = "sessions";
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          const st = db.createObjectStore(STORE, { keyPath: "id" });
+          st.createIndex("byDate", "date");
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbPut(session) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).put(session);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  function dbGetAll() {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readonly");
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbGet(id) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readonly");
+      const req = tx.objectStore(STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbDelete(id) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // -------------------------
+  // App state
+  // -------------------------
+  const DEFAULT_PEOPLE = ["Ken","RY","PY","Cas","Dex","CT","JW","MY","Chelle"];
+  let people = [];
+  let present = new Set();
+  let currentSessionId = null;
+
+  let items = []; // {id, desc, cents, paidBy, splitAmong}
+  let mj = [];    // {id, from, to, cents}
+
+  let customSplitSet = new Set();
+  let mjLosersSet = new Set();
+  let mjWinnersSet = new Set();
+
+  // -------------------------
+  // UI render
+  // -------------------------
+  function renderPeopleChips() {
+    const el = $("peopleChips");
+    el.innerHTML = "";
+    people.forEach(name => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (present.has(name) ? " active" : "");
+      chip.textContent = name;
+      chip.onclick = () => {
+        if (present.has(name)) present.delete(name); else present.add(name);
+        customSplitSet = new Set([...customSplitSet].filter(n => present.has(n)));
+        mjLosersSet = new Set([...mjLosersSet].filter(n => present.has(n)));
+        mjWinnersSet = new Set([...mjWinnersSet].filter(n => present.has(n)));
+        renderPeopleChips();
+        renderSelectOptions();
+        renderCustomSplitChips();
+        renderMjLosersChips();
+        renderMjWinnersChips();
+        renderItemsTable();
+        renderMjTable();
+        recalc();
+      };
+      el.appendChild(chip);
+    });
+  }
+
+  function renderSelectOptions() {
+    const selects = [ $("itemPaidBy"), $("mjLoser"), $("mjWinner") ];
+    const presentList = Array.from(present).sort();
+    selects.forEach(sel => {
+      const current = sel.value;
+      sel.innerHTML = "";
+      presentList.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name; opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      if (presentList.includes(current)) sel.value = current;
+    });
+  }
+
+  function renderCustomSplitChips() {
+    const wrap = $("customSplitChips");
+    wrap.innerHTML = "";
+    people.forEach(name => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (customSplitSet.has(name) ? " active" : "");
+      chip.textContent = name;
+      chip.onclick = () => {
+        if (customSplitSet.has(name)) customSplitSet.delete(name);
+        else customSplitSet.add(name);
+        renderCustomSplitChips();
+      };
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderMjLosersChips() {
+    const wrap = $("mjLosersChips");
+    wrap.innerHTML = "";
+    Array.from(present).sort().forEach(name => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (mjLosersSet.has(name) ? " active" : "");
+      chip.textContent = name;
+      chip.onclick = () => {
+        if (mjLosersSet.has(name)) mjLosersSet.delete(name);
+        else mjLosersSet.add(name);
+        if (mjLosersSet.has(name)) mjWinnersSet.delete(name);
+        renderMjLosersChips();
+        renderMjWinnersChips();
+      };
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderMjWinnersChips() {
+    const wrap = $("mjMultiWinnersChips");
+    wrap.innerHTML = "";
+    Array.from(present).sort().forEach(name => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (mjWinnersSet.has(name) ? " active" : "");
+      chip.textContent = name;
+      chip.onclick = () => {
+        if (mjWinnersSet.has(name)) mjWinnersSet.delete(name);
+        else mjWinnersSet.add(name);
+        if (mjWinnersSet.has(name)) mjLosersSet.delete(name);
+        renderMjLosersChips();
+        renderMjWinnersChips();
+      };
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderItemsTable() {
+    const t = $("itemsTable");
+    if (!items.length) {
+      t.innerHTML = "<tr><td class='muted'>No items yet</td></tr>";
+      return;
+    }
+    t.innerHTML = `
+      <tr>
+        <th>Item</th><th class="right">Amt</th><th>Paid</th><th>Split</th><th></th>
+      </tr>
+    `;
+    items.forEach(it => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(it.desc || "(item)")}</td>
+        <td class="right">${centsToMoney(it.cents)}</td>
+        <td>${escapeHtml(it.paidBy)}</td>
+        <td><span class="pill">${it.splitAmong.length} ppl</span> <span class="muted">${escapeHtml(it.splitAmong.join(", "))}</span></td>
+        <td class="right"><button class="secondary">Del</button></td>
+      `;
+      tr.querySelector("button").onclick = () => {
+        items = items.filter(x => x.id !== it.id);
+        renderItemsTable();
+        recalc();
+      };
+      t.appendChild(tr);
+    });
+  }
+
+  function renderMjTable() {
+    const t = $("mjTable");
+    if (!mj.length) {
+      t.innerHTML = "<tr><td class='muted'>No mahjong entries yet</td></tr>";
+      return;
+    }
+    t.innerHTML = `
+      <tr>
+        <th>From</th><th>To</th><th class="right">Amt</th><th></th>
+      </tr>
+    `;
+    mj.forEach(e => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(e.from)}</td>
+        <td>${escapeHtml(e.to)}</td>
+        <td class="right">${centsToMoney(e.cents)}</td>
+        <td class="right"><button class="secondary">Del</button></td>
+      `;
+      tr.querySelector("button").onclick = () => {
+        mj = mj.filter(x => x.id !== e.id);
+        renderMjTable();
+        recalc();
+      };
+      t.appendChild(tr);
+    });
+  }
+
+  function renderBalances(net) {
+    const t = $("balancesTable");
+    const list = Object.entries(net).sort((a,b)=>b[1]-a[1]);
+    if (!list.length) {
+      t.innerHTML = "<tr><td class='muted'>Add entries to see results</td></tr>";
+      return;
+    }
+    t.innerHTML = "<tr><th>Name</th><th class='right'>Net</th></tr>";
+    list.forEach(([name, cents]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(name)}</td><td class="right">${centsToMoney(cents)}</td>`;
+      t.appendChild(tr);
+    });
+  }
+
+  function renderSettlement(tx) {
+    const t = $("settlementTable");
+    if (!tx.length) {
+      t.innerHTML = "<tr><td class='muted'>No settlement needed (or no entries)</td></tr>";
+      return;
+    }
+    t.innerHTML = "<tr><th>Payer</th><th>Receiver</th><th class='right'>Amount</th></tr>";
+    tx.forEach(x => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.to)}</td><td class="right">${centsToMoney(x.cents)}</td>`;
+      t.appendChild(tr);
+    });
+  }
+
+  // -------------------------
+  // Core calc
+  // -------------------------
+  function recalc() {
+    const net = {};
+    const presentList = Array.from(present).sort();
+    presentList.forEach(n => net[n] = 0);
+
+    for (const it of items) {
+      if (!net.hasOwnProperty(it.paidBy)) continue;
+      net[it.paidBy] += it.cents;
+
+      const group = it.splitAmong.filter(n => net.hasOwnProperty(n)).slice().sort();
+      if (!group.length) continue;
+
+      const shares = splitCentsEvenly(it.cents, group);
+      for (const name of group) net[name] -= shares.get(name);
+    }
+
+    for (const e of mj) {
+      if (!net.hasOwnProperty(e.from) || !net.hasOwnProperty(e.to)) continue;
+      net[e.from] -= e.cents;
+      net[e.to] += e.cents;
+    }
+
+    renderBalances(net);
+    renderSettlement(computeSettlementCents(net));
+
+    const sum = Object.values(net).reduce((a,b)=>a+b, 0);
+    $("sanity").textContent =
+      `Net sum (should be $0.00): ${centsToMoney(sum)} • Present: ${presentList.length} • Items: ${items.length} • MJ: ${mj.length}`;
+  }
+
+  // Multi-losers -> Multi-winners (total amount)
+  function addMultiLosersToWinners(totalCents, losers, winners) {
+    const losersSorted = losers.slice().sort();
+    const winnersSorted = winners.slice().sort();
+
+    const payShares = splitCentsEvenly(totalCents, losersSorted);
+    const recvShares = splitCentsEvenly(totalCents, winnersSorted);
+
+    const net = {};
+    losersSorted.forEach(n => net[n] = (net[n] || 0) - payShares.get(n));
+    winnersSorted.forEach(n => net[n] = (net[n] || 0) + recvShares.get(n));
+
+    const tx = computeSettlementCents(net);
+    tx.forEach(t => mj.push({ id: uuid(), from: t.from, to: t.to, cents: t.cents }));
+  }
+
+  // -------------------------
+  // Session save/load
+  // -------------------------
+  function getSessionObj() {
+    const name = $("sessionName").value.trim() || "Untitled session";
+    const date = $("sessionDate").value || new Date().toISOString().slice(0,10);
+    return {
+      id: currentSessionId || uuid(),
+      name,
+      date,
+      people: [...people],
+      present: [...present],
+      items,
+      mj,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function loadSessionObj(s) {
+    currentSessionId = s.id;
+    $("deleteSessionBtn").disabled = false;
+    $("sessionName").value = s.name || "";
+    $("sessionDate").value = s.date || new Date().toISOString().slice(0,10);
+
+    people = Array.isArray(s.people) && s.people.length ? s.people : [...DEFAULT_PEOPLE];
+    present = new Set(Array.isArray(s.present) ? s.present : []);
+    items = Array.isArray(s.items) ? s.items : [];
+    mj = Array.isArray(s.mj) ? s.mj : [];
+
+    customSplitSet = new Set([...present]);
+    mjLosersSet = new Set();
+    mjWinnersSet = new Set();
+
+    renderPeopleChips();
+    renderSelectOptions();
+    renderCustomSplitChips();
+    renderMjLosersChips();
+    renderMjWinnersChips();
+    renderItemsTable();
+    renderMjTable();
+    recalc();
+  }
+
+  function newSession() {
+    currentSessionId = null;
+    $("deleteSessionBtn").disabled = true;
+
+    $("sessionName").value = "";
+    $("sessionDate").value = new Date().toISOString().slice(0,10);
+
+    items = [];
+    mj = [];
+    present = new Set([...people]);
+
+    customSplitSet = new Set([...present]);
+    mjLosersSet = new Set();
+    mjWinnersSet = new Set();
+
+    $("mjMultiTotal").value = "";
+    $("mjMultiQuick").value = "none";
+
+    renderPeopleChips();
+    renderSelectOptions();
+    renderCustomSplitChips();
+    renderMjLosersChips();
+    renderMjWinnersChips();
+    renderItemsTable();
+    renderMjTable();
+    recalc();
+  }
+
+  async function refreshHistory() {
+    const all = await dbGetAll();
+    all.sort((a,b)=> (b.date||"").localeCompare(a.date||"") || (b.updatedAt||"").localeCompare(a.updatedAt||""));
+    const sel = $("historySelect");
+    sel.innerHTML = "";
+    if (!all.length) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "(no saved sessions yet)";
+      sel.appendChild(opt);
+      return;
+    }
+    all.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = `${s.date || ""} — ${s.name || "Untitled"} (${(s.present||[]).length} present)`;
+      sel.appendChild(opt);
+    });
+  }
+
+  // -------------------------
+  // Export / Import helpers
+  // -------------------------
+  async function exportAllSessions() {
+    const all = await dbGetAll();
+    const payload = { exportedAt: new Date().toISOString(), sessions: all };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mahjong_splitter_backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // -------------------------
+  // Events
+  // -------------------------
+  function bindEvents() {
+    $("itemSplitMode").onchange = () => {
+      const isCustom = $("itemSplitMode").value === "custom";
+      $("customSplitWrap").style.display = isCustom ? "block" : "none";
+      if (isCustom) {
+        customSplitSet = new Set([...present]);
+        renderCustomSplitChips();
+      }
+    };
+
+    $("addItemBtn").onclick = () => {
+      if (!present.size) return alert("No one is marked present.");
+      const desc = $("itemDesc").value.trim();
+      const cents = parseMoneyToCents($("itemAmount").value);
+      const paidBy = $("itemPaidBy").value;
+
+      if (!paidBy) return alert("Pick who paid.");
+      if (cents === null || cents <= 0) return alert("Enter a valid amount (e.g. 24.30).");
+
+      const splitAmong = ($("itemSplitMode").value === "custom")
+        ? [...customSplitSet].filter(n => present.has(n))
+        : [...present];
+
+      if (!splitAmong.length) return alert("No one selected to split among.");
+
+      items.push({ id: uuid(), desc, cents, paidBy, splitAmong });
+      $("itemDesc").value = "";
+      $("itemAmount").value = "";
+      renderItemsTable();
+      recalc();
+    };
+
+    $("clearItemBtn").onclick = () => {
+      $("itemDesc").value = "";
+      $("itemAmount").value = "";
+    };
+
+    $("addMjBtn").onclick = () => {
+      const from = $("mjLoser").value;
+      const to = $("mjWinner").value;
+      const cents = parseMoneyToCents($("mjAmount").value);
+
+      if (!from || !to) return alert("Pick loser and winner.");
+      if (from === to) return alert("Loser and winner cannot be the same.");
+      if (cents === null || cents <= 0) return alert("Enter a valid amount (e.g. 20.00).");
+
+      mj.push({ id: uuid(), from, to, cents });
+      $("mjAmount").value = "";
+      renderMjTable();
+      recalc();
+    };
+
+    $("mjMultiQuick").onchange = () => {
+      const v = $("mjMultiQuick").value;
+      if (v === "reset") {
+        mjLosersSet = new Set();
+        mjWinnersSet = new Set();
+      } else if (v === "allWinners") {
+        mjWinnersSet = new Set([...present]);
+        mjLosersSet.forEach(n => mjWinnersSet.delete(n));
+      } else if (v === "allLosers") {
+        mjLosersSet = new Set([...present]);
+        mjWinnersSet.forEach(n => mjLosersSet.delete(n));
+      }
+      $("mjMultiQuick").value = "none";
+      renderMjLosersChips();
+      renderMjWinnersChips();
+    };
+
+    $("addMjMultiBtn").onclick = () => {
+      const totalCents = parseMoneyToCents($("mjMultiTotal").value);
+      if (totalCents === null || totalCents <= 0) return alert("Enter a valid total amount.");
+
+      const losers = [...mjLosersSet].filter(n => present.has(n));
+      const winners = [...mjWinnersSet].filter(n => present.has(n));
+
+      if (!losers.length) return alert("Pick at least 1 loser (payer).");
+      if (!winners.length) return alert("Pick at least 1 winner (receiver).");
+
+      const overlap = losers.filter(n => winners.includes(n));
+      if (overlap.length) return alert("A person cannot be both loser and winner in the same multi split.");
+
+      addMultiLosersToWinners(totalCents, losers, winners);
+
+      $("mjMultiTotal").value = "";
+      mjLosersSet = new Set();
+      mjWinnersSet = new Set();
+      renderMjLosersChips();
+      renderMjWinnersChips();
+
+      renderMjTable();
+      recalc();
+    };
+
+    $("saveSessionBtn").onclick = async () => {
+      const s = getSessionObj();
+      await dbPut(s);
+      currentSessionId = s.id;
+      $("deleteSessionBtn").disabled = false;
+      await refreshHistory();
+      alert("Saved locally ✅");
+    };
+
+    $("newSessionBtn").onclick = () => {
+      if (confirm("Start a new session? (Current unsaved changes will be lost)")) newSession();
+    };
+
+    $("loadSessionBtn").onclick = async () => {
+      const id = $("historySelect").value;
+      if (!id) return;
+      const s = await dbGet(id);
+      if (!s) return alert("Could not load that session.");
+      loadSessionObj(s);
+    };
+
+    $("deleteSessionBtn").onclick = async () => {
+      if (!currentSessionId) return;
+      if (!confirm("Delete this saved session from this device?")) return;
+      await dbDelete(currentSessionId);
+      currentSessionId = null;
+      $("deleteSessionBtn").disabled = true;
+      await refreshHistory();
+      alert("Deleted ✅");
+      newSession();
+    };
+
+    $("addPersonBtn").onclick = () => {
+      const name = $("newPersonName").value.trim();
+      if (!name) return;
+      if (people.some(p => p.toLowerCase() === name.toLowerCase())) return alert("Name already exists.");
+      people.push(name);
+      $("newPersonName").value = "";
+      present.add(name);
+      customSplitSet.add(name);
+      renderPeopleChips();
+      renderSelectOptions();
+      renderCustomSplitChips();
+      renderMjLosersChips();
+      renderMjWinnersChips();
+      recalc();
+    };
+
+    $("exportBtn").onclick = exportAllSessions;
+    $("importBtn").onclick = () => $("importFile").click();
+
+    $("importFile").onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      let data;
+      try { data = JSON.parse(text); } catch { return alert("Invalid JSON file."); }
+      const sessions = data?.sessions;
+      if (!Array.isArray(sessions)) return alert("JSON missing sessions array.");
+      for (const s of sessions) {
+        if (s && s.id) await dbPut(s);
+      }
+      await refreshHistory();
+      alert("Imported ✅");
+      e.target.value = "";
+    };
+
+    $("copyLinkBtn").onclick = async () => {
+      const msg =
+`This HTML app won’t run properly inside Telegram/WhatsApp preview (they block storage/JS).
+Best options:
+1) Open in Safari (Share → Open in Browser) then Add to Home Screen.
+2) Host it (GitHub Pages/Cloudflare Pages) and open the link.
+3) Use a local server app (a-Shell mini) and open http://localhost:8080/mahjong.html
+Always export JSON as backup.`;
+      try {
+        await navigator.clipboard.writeText(msg);
+        alert("Copied help steps ✅");
+      } catch {
+        alert(msg);
+      }
+    };
+
+    $("exportNowBtn").onclick = exportAllSessions;
+  }
+
+  // -------------------------
+  // Init
+  // -------------------------
+  async function init() {
+    // Show banner if in-app browser detected
+    if (detectInAppBrowser()) {
+      $("inappBanner").style.display = "block";
+    }
+
+    // DB
+    try {
+      db = await openDB();
+      $("dbStatus").textContent = "DB: IndexedDB ready (local storage).";
+    } catch (err) {
+      $("dbStatus").textContent = "DB ERROR: IndexedDB not available (common in chat-app preview).";
+      // still allow usage (no history), but warn user
+      $("inappBanner").style.display = "block";
+    }
+
+    people = [...DEFAULT_PEOPLE];
+    present = new Set([...people]);
+    $("sessionDate").value = new Date().toISOString().slice(0,10);
+
+    customSplitSet = new Set([...present]);
+
+    renderPeopleChips();
+    renderSelectOptions();
+    renderCustomSplitChips();
+    renderMjLosersChips();
+    renderMjWinnersChips();
+    renderItemsTable();
+    renderMjTable();
+    recalc();
+
+    bindEvents();
+    try { await refreshHistory(); } catch {}
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
