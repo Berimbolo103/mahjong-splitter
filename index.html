@@ -1,1079 +1,1262 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Mahjong & Bill Splitter (Exact Cents • Local)</title>
-  <style>
-    :root {
-      --pad: 14px;
-      --radius: 14px;
-      --bg: #f6f7fb;
-      --card: #fff;
-      --text: #111;
-      --muted: rgba(0,0,0,.6);
-      --line: #eef1f8;
-      --border: #e2e5ef;
-      --warnbg: #fff3cd;
-      --warnbd: #ffe69c;
-      --warnfg: #664d03;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>SplitLah! – Bill & Mahjong Splitter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f4f0e8;
+  --bg2: #ebe6db;
+  --card: #ffffff;
+  --border: #ddd8ce;
+  --text: #1c1a17;
+  --muted: #7a6e60;
+  --primary: #1a5237;
+  --primary-d: #133d28;
+  --primary-l: #2a6e48;
+  --primary-faint: #e6f2ec;
+  --gold: #c0820a;
+  --gold-bg: #fef6e4;
+  --red: #b83232;
+  --red-bg: #fceaea;
+  --green: #1a6b41;
+  --green-bg: #e6f4ec;
+  --blue: #1d4ed8;
+  --coral: #d44f3a;
+  --r: 16px;
+  --r-sm: 10px;
+  --shadow: 0 2px 10px rgba(0,0,0,.07);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,.13);
+  --nav-h: 66px;
+  --fd: 'Syne', sans-serif;
+  --fb: 'Outfit', sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));overflow-x:hidden}
 
-    * { -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: var(--bg);
-      color: var(--text);
-      padding-bottom: env(safe-area-inset-bottom);
-    }
+/* === HEADER === */
+.app-hdr{position:sticky;top:0;z-index:100;background:var(--primary);padding:calc(env(safe-area-inset-top)+12px) 18px 12px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,.22)}
+.hdr-left .title{font-family:var(--fd);font-size:21px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.hdr-left .title em{color:#f5d98a;font-style:normal}
+.hdr-left .sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px}
+.hdr-save{background:var(--gold);border:none;color:#fff;font-family:var(--fb);font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;cursor:pointer}
 
-    header {
-      padding: 14px 16px;
-      background:#111;
-      color:#fff;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      padding-top: calc(14px + env(safe-area-inset-top));
-    }
-    header h1 { margin: 0; font-size: 16px; }
-    header p { margin: 6px 0 0; opacity:.8; font-size: 12px; }
+/* === BOTTOM NAV === */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100;box-shadow:0 -3px 16px rgba(0,0,0,.07)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 2px 7px;cursor:pointer;position:relative;border:none;background:none;gap:3px}
+.nav-btn .ico{font-size:21px;line-height:1;transition:transform .15s}
+.nav-btn .lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.3px;font-family:var(--fb)}
+.nav-btn.active .lbl{color:var(--primary)}
+.nav-btn.active .ico{transform:translateY(-2px)}
+.nav-btn::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--primary);opacity:0;transition:opacity .15s}
+.nav-btn.active::after{opacity:1}
+.nav-badge{position:absolute;top:5px;right:calc(50% - 20px);background:var(--coral);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px}
 
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px; display: grid; gap: 12px; }
-    .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
-    @media (min-width: 980px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+/* === TABS === */
+.tab{display:none;padding:14px;max-width:680px;margin:0 auto}
+.tab.on{display:block}
 
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: var(--pad);
-      box-shadow: 0 6px 18px rgba(0,0,0,.06);
-    }
-    .card h2 { margin: 0 0 10px; font-size: 15px; }
-    .muted { font-size: 12px; color: var(--muted); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); }
+/* === CARDS === */
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;border:1px solid var(--border)}
+.ctitle{font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:.3px;color:var(--primary);margin-bottom:13px;display:flex;align-items:center;gap:6px}
+.ctitle .ico{font-size:15px}
 
-    label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
+/* === FORM === */
+.field{margin-bottom:11px}
+.flabel{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;display:block;margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg);font-size:16px;font-family:var(--fb);color:var(--text);transition:border-color .15s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--primary-l);background:#fff}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%237a6e60' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-    input, select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background:#fff;
-      font-size: 16px; /* iOS: prevent zoom on focus */
-    }
+/* === BUTTONS === */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:11px 16px;border-radius:var(--r-sm);border:none;font-family:var(--fb);font-size:14px;font-weight:600;cursor:pointer;transition:all .13s;min-height:43px;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--primary);color:#fff}
+.btn-s{background:var(--bg2);color:var(--text);border:1.5px solid var(--border)}
+.btn-d{background:var(--red-bg);color:var(--red);border:1.5px solid #f0cccc}
+.btn-g{background:var(--green);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-sm{padding:6px 11px;font-size:12px;min-height:32px;border-radius:8px}
+.btn-full{width:100%}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.brow{display:flex;gap:8px;flex-wrap:wrap}
+.brow .btn{flex:1}
 
-    button {
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background:#111;
-      color:#fff;
-      cursor:pointer;
-      font-weight: 700;
-      font-size: 15px;
-      min-height: 44px;
-    }
-    button.secondary { background:#fff; color:#111; }
-    button.danger { background:#c62828; border-color:#c62828; }
-    button:disabled { opacity:.5; cursor:not-allowed; }
+/* === CHIPS === */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;cursor:pointer;user-select:none;font-size:13px;font-weight:500;background:var(--card);min-height:34px;display:flex;align-items:center;gap:4px;transition:all .12s;font-family:var(--fb)}
+.chip:active{transform:scale(.95)}
+.chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.chip.loser{background:var(--red-bg);border-color:#f0cccc;color:var(--red)}
+.chip.winner{background:var(--green-bg);border-color:#b2d8c2;color:var(--green)}
 
-    .hr { height:1px; background: var(--line); margin: 12px 0; }
+/* === DIVIDER === */
+.div{height:1px;background:var(--border);margin:14px 0}
 
-    .chips { display:flex; flex-wrap:wrap; gap: 10px; }
-    .chip {
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 10px 12px;
-      cursor:pointer;
-      user-select:none;
-      font-size: 14px;
-      background:#fff;
-      min-height: 40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .chip.active { background:#111; color:#fff; border-color:#111; }
+/* === PERSON GRID === */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:7px}
+.pcard{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:10px 5px;text-align:center;cursor:pointer;transition:all .12s;user-select:none}
+.pcard.on{background:var(--primary-faint);border-color:var(--primary-l)}
+.pcard .av{width:36px;height:36px;border-radius:99px;background:var(--muted);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 5px;font-family:var(--fd)}
+.pcard.on .av{background:var(--primary)}
+.pcard .pn{font-size:11px;font-weight:600;color:var(--text)}
+.pcard .ps{font-size:10px;color:var(--muted);margin-top:1px}
 
-    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .row3 { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    .row4 { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 720px) {
-      .row3 { grid-template-columns: 1fr 1fr 1fr; }
-      .row4 { grid-template-columns: 1.2fr .8fr 1fr 1fr; }
-    }
+/* === SPLIT MODE TABS === */
+.sm-tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg2);border-radius:10px;padding:3px;gap:3px;margin-bottom:11px}
+.sm-tab{padding:8px 2px;border-radius:8px;text-align:center;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;background:transparent;border:none;font-family:var(--fb);transition:all .13s;line-height:1.3;font-size:11px}
+.sm-tab.on{background:var(--card);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.09)}
 
-    .twoBtns { display:flex; gap:10px; flex-wrap: wrap; }
-    @media (max-width: 560px) {
-      .twoBtns button { flex: 1; }
-    }
+/* === SLIDERS === */
+.slrow{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.slname{font-size:13px;font-weight:500;width:54px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slval{font-size:12px;font-weight:700;color:var(--primary);width:38px;text-align:right;flex-shrink:0}
+input[type="range"]{flex:1;height:4px;border-radius:2px;background:var(--border);border:none;padding:0;cursor:pointer;accent-color:var(--primary)}
+.pct-total{font-size:12px;font-weight:700;padding:5px 10px;border-radius:8px;text-align:center;margin-top:6px}
+.pct-ok{background:var(--green-bg);color:var(--green)}
+.pct-bad{background:var(--red-bg);color:var(--red)}
 
-    .pill { font-size: 12px; padding: 4px 8px; border-radius: 999px; background:#f1f3fa; display:inline-block; }
+/* === ITEM ROWS === */
+.irow{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-bottom:1px solid var(--border);animation:fadeIn .18s ease}
+.irow:last-child{border-bottom:none}
+.irow.ignored{opacity:.38}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.imain{flex:1;min-width:0}
+.idesc{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imeta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.iamt{font-family:var(--fd);font-size:16px;font-weight:700;flex-shrink:0;color:var(--text)}
 
-    .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
-    table { width:100%; border-collapse: collapse; min-width: 520px; }
-    th, td { text-align:left; font-size: 13px; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    th { font-size: 12px; color: var(--muted); }
-    .right { text-align:right; }
-    table.smallMin { min-width: 420px; }
+/* === MJ ROWS === */
+.mrow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);animation:fadeIn .18s ease}
+.mrow:last-child{border-bottom:none}
+.mfrom{font-size:13px;font-weight:700;color:var(--red)}
+.mto{font-size:13px;font-weight:700;color:var(--green)}
+.mamt{font-family:var(--fd);font-size:15px;font-weight:700;margin-left:auto;color:var(--text)}
 
-    .banner {
-      margin: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--warnbg);
-      border: 1px solid var(--warnbd);
-      color: var(--warnfg);
-      display: none;
-    }
-    .banner b { color: #3b2f00; }
-    .banner .twoBtns { margin-top: 10px; }
-    .small { font-size: 12px; opacity: .9; }
+/* === BALANCES === */
+.bcard{display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--bg2);border-radius:10px;margin-bottom:7px;border:1px solid var(--border)}
+.bav{width:40px;height:40px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;font-family:var(--fd);flex-shrink:0;color:#fff}
+.bname{font-size:14px;font-weight:600}
+.bdetail{font-size:11px;color:var(--muted)}
+.bamt{font-family:var(--fd);font-size:18px;font-weight:700;margin-left:auto}
+.pos{color:var(--green)}
+.neg{color:var(--red)}
+.zero{color:var(--muted)}
 
-    .kbd { font-family: ui-monospace, Menlo, Consolas, monospace; background: rgba(0,0,0,.08); padding: 2px 6px; border-radius: 6px; }
-  </style>
+/* === SETTLEMENT === */
+.srow{display:flex;align-items:center;gap:9px;padding:13px;background:var(--bg2);border-radius:10px;margin-bottom:7px;border:1px solid var(--border)}
+.sfrom{font-size:13px;font-weight:700;color:var(--red)}
+.sto{font-size:13px;font-weight:700;color:var(--green)}
+.samt{font-family:var(--fd);font-size:16px;font-weight:800;margin-left:auto;color:var(--text)}
+
+/* === FAIRNESS === */
+.fb-wrap{margin-bottom:10px}
+.fb-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.fb{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.fb-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.bar-g{background:var(--green)}
+.bar-gold{background:var(--gold)}
+.bar-r{background:var(--red)}
+
+/* === SCANNER === */
+.upzone{border:2px dashed var(--border);border-radius:var(--r);padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.upzone:hover,.upzone.dv{border-color:var(--primary);background:var(--primary-faint)}
+.up-ico{font-size:46px;margin-bottom:10px}
+.up-txt{font-size:15px;font-weight:600}
+.up-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.spin-wrap{display:none;text-align:center;padding:30px}
+.spinner{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* === ASSIGN UI === */
+.aitem{background:var(--bg2);border-radius:10px;padding:12px;margin-bottom:9px;border:1px solid var(--border)}
+.aheader{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px}
+.aname{font-size:14px;font-weight:600;flex:1}
+.aamt{font-family:var(--fd);font-size:14px;font-weight:700;white-space:nowrap}
+.achips{display:flex;flex-wrap:wrap;gap:5px}
+.achip{border:1.5px solid var(--border);border-radius:99px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:500;background:var(--card);transition:all .1s;font-family:var(--fb)}
+.achip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* === SUMMARY STATS === */
+.sumgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;margin-bottom:14px}
+.sumval{font-family:var(--fd);font-size:22px;font-weight:800}
+.sumlbl{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* === TOAST === */
+.toasts{position:fixed;bottom:calc(var(--nav-h)+14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:7px;pointer-events:none;width:min(calc(100vw - 28px),340px)}
+.toast{background:#1a1a1a;color:#fff;padding:11px 17px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);animation:tIn .22s ease;text-align:center;font-family:var(--fb)}
+.toast.ok{background:var(--green)}
+.toast.warn{background:var(--gold)}
+.toast.err{background:var(--red)}
+@keyframes tIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* === MODAL === */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end}
+.mbg.on{display:flex}
+.modal{background:var(--card);border-radius:var(--r) var(--r) 0 0;padding:18px;width:100%;max-height:86vh;overflow-y:auto;padding-bottom:calc(18px + env(safe-area-inset-bottom));animation:slideUp .23s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.mtitle{font-family:var(--fd);font-size:18px;font-weight:700;margin-bottom:14px}
+
+/* === WA PREVIEW === */
+.wa-pre{background:#e9f5d9;border-radius:12px;padding:15px;font-size:13px;line-height:1.6;color:#111;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;border:1px solid #c5e1a5;margin-bottom:13px;font-family:'Helvetica Neue',sans-serif}
+
+/* === MISC === */
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty .eico{font-size:36px;margin-bottom:8px}
+.empty .etxt{font-size:14px}
+.seclab{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:600}
+.tg{background:var(--green-bg);color:var(--green)}
+.tr{background:var(--red-bg);color:var(--red)}
+.tgold{background:var(--gold-bg);color:var(--gold)}
+.tgrey{background:var(--bg2);color:var(--muted)}
+.micro-badge{background:var(--gold-bg);color:var(--gold);font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px}
+.alert{padding:11px 13px;border-radius:10px;font-size:13px;margin-bottom:11px;display:flex;gap:7px;align-items:flex-start;line-height:1.4}
+.alert-i{background:var(--primary-faint);color:var(--primary-l);border:1px solid #a8d5bc}
+.alert-w{background:var(--gold-bg);color:#6b4800;border:1px solid #f5d97a}
+.alert-e{background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6}
+.iab-banner{background:var(--gold-bg);border:1px solid var(--gold);border-radius:var(--r);padding:13px;margin-bottom:12px;font-size:13px;color:#5a3a00;display:none}
+.tog{width:42px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none}
+.tog::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tog.on{background:var(--primary)}
+.tog.on::after{left:22px}
+.togrow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.togrow:last-child{border-bottom:none}
+.togl{font-size:14px;font-weight:500}
+.togs{font-size:11px;color:var(--muted);margin-top:1px}
+.strow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.strow:last-child{border-bottom:none}
+.stlbl{font-size:13px;color:var(--muted)}
+.stval{font-size:14px;font-weight:600;font-family:var(--fd)}
+</style>
 </head>
 <body>
-<header>
-  <h1>Mahjong & Bill Splitter (Exact Cents • Local)</h1>
-  <p>Offline + history (IndexedDB) • Multi-losers → Multi-winners • Exact cents math</p>
+
+<!-- HEADER -->
+<header class="app-hdr">
+  <div class="hdr-left">
+    <div class="title">Split<em>Lah</em>! 🀄</div>
+    <div class="sub" id="hdrSub">Ready — tap Session to begin</div>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-pill" id="paxPill">0 pax</span>
+    <button class="hdr-save" id="saveBtn">Save</button>
+  </div>
 </header>
 
-<!-- In-app browser / preview warning -->
-<div id="inappBanner" class="banner">
-  <div><b>Heads up:</b> You’re viewing this inside a chat app preview (Telegram/WhatsApp/etc).</div>
-  <div class="small" style="margin-top:6px;">
-    These previews often break storage (history) and sometimes JS. For best results, open in <b>Safari</b> and optionally <b>Add to Home Screen</b>.
+<!-- BOTTOM NAV -->
+<nav class="bot-nav">
+  <button class="nav-btn on" data-tab="session"><span class="ico">🏠</span><span class="lbl">Session</span></button>
+  <button class="nav-btn" data-tab="items"><span class="ico">🍜</span><span class="lbl">Items</span><span class="nav-badge" id="iBadge" style="display:none">0</span></button>
+  <button class="nav-btn" data-tab="mahjong"><span class="ico">🀄</span><span class="lbl">Mahjong</span><span class="nav-badge" id="mBadge" style="display:none">0</span></button>
+  <button class="nav-btn" data-tab="scanner"><span class="ico">📷</span><span class="lbl">Scanner</span></button>
+  <button class="nav-btn" data-tab="results"><span class="ico">📊</span><span class="lbl">Results</span></button>
+</nav>
+
+<!-- TOASTS -->
+<div class="toasts" id="toasts"></div>
+
+<!-- ==================== TAB: SESSION ==================== -->
+<div class="tab on" id="tab-session">
+
+  <div class="iab-banner" id="iabBanner">⚠️ <strong>In-app browser</strong> — storage may fail. Open in Safari for best results.</div>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">📋</span>Session Info</div>
+    <div class="field"><label class="flabel">Session Name</label>
+      <input id="sessName" placeholder="e.g. Sunday Mahjong @ Dex's"/></div>
+    <div class="g2">
+      <div class="field"><label class="flabel">Date</label><input type="date" id="sessDate"/></div>
+      <div class="field"><label class="flabel">Venue</label><input id="sessVenue" placeholder="e.g. Dex's place"/></div>
+    </div>
   </div>
-  <div class="twoBtns">
-    <button id="copyLinkBtn" class="secondary">Copy help steps</button>
-    <button id="exportNowBtn" class="secondary">Export JSON now</button>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">👥</span>Who's Here? <span style="margin-left:auto;font-size:11px;font-weight:500;color:var(--muted)">Tap to toggle</span></div>
+    <div class="pgrid" id="personGrid"></div>
+    <div class="div"></div>
+    <div class="seclab">Add Person</div>
+    <div style="display:flex;gap:8px">
+      <input id="newName" placeholder="New name" style="flex:1"/>
+      <button class="btn btn-p btn-sm" id="addPersonBtn">+ Add</button>
+    </div>
   </div>
-  <div class="small" style="margin-top:8px;">
-    If you can’t “Open in Safari”, the only reliable way is to use a hosted link (GitHub Pages/Cloudflare Pages) or a local server app.
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">📚</span>Saved Sessions</div>
+    <div class="field"><label class="flabel">Load Session</label><select id="histSel"></select></div>
+    <div class="brow" style="margin-bottom:12px">
+      <button class="btn btn-s" id="loadBtn">Load</button>
+      <button class="btn btn-s" id="newSessBtn">New</button>
+      <button class="btn btn-d btn-sm" id="delSessBtn" disabled>Delete</button>
+    </div>
+    <div class="div"></div>
+    <div class="seclab">Backup</div>
+    <div class="brow">
+      <button class="btn btn-s" id="expBtn">⬆️ Export JSON</button>
+      <button class="btn btn-s" id="impBtn">⬇️ Import JSON</button>
+    </div>
+    <input id="impFile" type="file" accept="application/json" style="display:none"/>
+    <div class="strow" style="margin-top:11px;padding-top:11px;border-top:1px solid var(--border)">
+      <span class="stlbl">Storage</span>
+      <span class="stval tag tgrey" id="dbStat">Checking…</span>
+    </div>
   </div>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">⚙️</span>Settings</div>
+    <div class="togrow">
+      <div>
+        <div class="togl">Ignore Micro-Charges</div>
+        <div class="togs">Exclude items under <input id="microAmt" style="width:52px;display:inline;padding:2px 6px;font-size:13px;border-radius:6px;font-size:14px" value="3.00" inputmode="decimal"/> from settlement</div>
+      </div>
+      <button class="tog" id="microTog"></button>
+    </div>
+  </div>
+
 </div>
 
-<div class="wrap">
-  <div class="grid">
-    <div class="card">
-      <h2>1) Session setup</h2>
-      <div class="row2">
-        <div>
-          <label>Session name</label>
-          <input id="sessionName" placeholder="e.g. Sunday Mahjong @ Dex house" />
-        </div>
-        <div>
-          <label>Date</label>
-          <input id="sessionDate" type="date" />
-        </div>
-      </div>
+<!-- ==================== TAB: ITEMS ==================== -->
+<div class="tab" id="tab-items">
 
-      <div class="hr"></div>
-
-      <div>
-        <label>People (tap to mark “present”)</label>
-        <div id="peopleChips" class="chips"></div>
-        <p class="muted">Add extra names on the right (Manage people).</p>
-      </div>
-
-      <div class="hr"></div>
-
-      <h2>2) Food / Order items</h2>
-      <div class="row4">
-        <div>
-          <label>Item</label>
-          <input id="itemDesc" placeholder="e.g. BBQ stingray" />
-        </div>
-        <div>
-          <label>Amount</label>
-          <input id="itemAmount" inputmode="decimal" placeholder="0.00" />
-        </div>
-        <div>
-          <label>Paid by</label>
-          <select id="itemPaidBy"></select>
-        </div>
-        <div>
-          <label>Split among</label>
-          <select id="itemSplitMode">
-            <option value="present">All present</option>
-            <option value="custom">Pick people</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="customSplitWrap" style="margin-top:10px; display:none;">
-        <div class="muted" style="margin-bottom:6px;">Pick who shares this item:</div>
-        <div id="customSplitChips" class="chips"></div>
-      </div>
-
-      <div class="twoBtns" style="margin-top:10px;">
-        <button id="addItemBtn">Add item</button>
-        <button id="clearItemBtn" class="secondary">Clear</button>
-      </div>
-
-      <div class="hr"></div>
-
-      <h2>3) Mahjong transfers (A pays B)</h2>
-      <div class="row3">
-        <div>
-          <label>Loser (pays)</label>
-          <select id="mjLoser"></select>
-        </div>
-        <div>
-          <label>Winner (receives)</label>
-          <select id="mjWinner"></select>
-        </div>
-        <div>
-          <label>Amount</label>
-          <input id="mjAmount" inputmode="decimal" placeholder="0.00" />
-        </div>
-      </div>
-      <div class="twoBtns" style="margin-top:10px;">
-        <button id="addMjBtn">Add transfer</button>
-      </div>
-
-      <div class="hr"></div>
-
-      <h2 style="margin-bottom:6px;">3b) Multi-losers → Multi-winners (one total amount)</h2>
-      <p class="muted" style="margin-top:0;">
-        Split total among losers and winners (exact cents), then auto-generate minimal transfers.
-      </p>
-
-      <div class="row2">
-        <div>
-          <label>Total amount (overall)</label>
-          <input id="mjMultiTotal" inputmode="decimal" placeholder="0.00" />
-        </div>
-        <div>
-          <label>Quick set</label>
-          <select id="mjMultiQuick">
-            <option value="none">—</option>
-            <option value="reset">Clear losers & winners</option>
-            <option value="allWinners">Winners = all present</option>
-            <option value="allLosers">Losers = all present</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="muted" style="margin-bottom:6px;">Pick losers (payers):</div>
-        <div id="mjLosersChips" class="chips"></div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="muted" style="margin-bottom:6px;">Pick winners (receivers):</div>
-        <div id="mjMultiWinnersChips" class="chips"></div>
-      </div>
-
-      <div class="twoBtns" style="margin-top:10px;">
-        <button id="addMjMultiBtn">Add multi split</button>
-      </div>
-
-      <div class="hr"></div>
-
-      <h2>4) Current session entries</h2>
-      <div class="row2">
-        <div>
-          <div class="muted">Food / items</div>
-          <div class="tableWrap">
-            <table id="itemsTable" class="smallMin"></table>
-          </div>
-        </div>
-        <div>
-          <div class="muted">Mahjong</div>
-          <div class="tableWrap">
-            <table id="mjTable" class="smallMin"></table>
-          </div>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="twoBtns">
-        <button id="saveSessionBtn">Save session</button>
-        <button id="newSessionBtn" class="secondary">New session</button>
-        <button id="deleteSessionBtn" class="danger" disabled>Delete loaded session</button>
-      </div>
-      <p class="muted">
-        Note: chat-app previews may not keep history reliably. Use Export/Import JSON as backup.
-      </p>
+  <div class="card">
+    <div class="ctitle"><span class="ico">➕</span>Add Item</div>
+    <div class="g2">
+      <div class="field"><label class="flabel">Description</label><input id="itemDesc" placeholder="e.g. Hokkien Mee"/></div>
+      <div class="field"><label class="flabel">Amount ($)</label><input id="itemAmt" inputmode="decimal" placeholder="0.00"/></div>
     </div>
+    <div class="field"><label class="flabel">Paid By</label><select id="itemPaid"></select></div>
+    <div class="field">
+      <label class="flabel">Split Mode</label>
+      <div class="sm-tabs" id="smTabs">
+        <button class="sm-tab on" data-mode="equal">⚖️ Equal</button>
+        <button class="sm-tab" data-mode="custom">👥 Custom</button>
+        <button class="sm-tab" data-mode="percent">📊 %Split</button>
+        <button class="sm-tab" data-mode="appetite">🍽️ Appetite</button>
+      </div>
+    </div>
+    <!-- Equal -->
+    <div id="modeEqual">
+      <div class="seclab">Split Among (tap to toggle)</div>
+      <div class="chips" id="eqChips"></div>
+    </div>
+    <!-- Custom -->
+    <div id="modeCustom" style="display:none">
+      <div class="seclab">Pick Who Shares</div>
+      <div class="chips" id="cusChips"></div>
+    </div>
+    <!-- Percent -->
+    <div id="modePct" style="display:none">
+      <div class="seclab">Percentage per Person (must total 100%)</div>
+      <div id="pctSliders"></div>
+      <div class="pct-total pct-bad" id="pctTotal">0% / 100%</div>
+    </div>
+    <!-- Appetite -->
+    <div id="modeApp" style="display:none">
+      <div class="seclab">Appetite Level per Person (1 light → 5 big eater)</div>
+      <div id="appSliders"></div>
+    </div>
+    <div class="brow" style="margin-top:13px">
+      <button class="btn btn-p" id="addItemBtn">Add Item</button>
+      <button class="btn btn-s" id="clrItemBtn">Clear</button>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="ctitle"><span class="ico">🛒</span>Items <span style="margin-left:auto;font-size:12px;font-weight:500;color:var(--muted)" id="itemsTot"></span></div>
+    <div id="itemsList"><div class="empty"><div class="eico">🍽️</div><div class="etxt">No items yet — add some food!</div></div></div>
+  </div>
+
+</div>
+
+<!-- ==================== TAB: MAHJONG ==================== -->
+<div class="tab" id="tab-mahjong">
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">🀄</span>Single Transfer</div>
+    <div class="g2">
+      <div class="field"><label class="flabel">Loser (Pays)</label><select id="mjLoser"></select></div>
+      <div class="field"><label class="flabel">Winner (Receives)</label><select id="mjWinner"></select></div>
+    </div>
+    <div class="field"><label class="flabel">Amount ($)</label><input id="mjAmt" inputmode="decimal" placeholder="0.00"/></div>
+    <button class="btn btn-p btn-full" id="addMjBtn">Add Transfer</button>
+  </div>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">🎰</span>Multi-Split (Losers → Winners)</div>
+    <div class="alert alert-i"><span>ℹ️</span><span>Split a pot among multiple losers & winners. Uses exact-cent math — no one gets shortchanged.</span></div>
+    <div class="field"><label class="flabel">Total Amount ($)</label><input id="mjMultiAmt" inputmode="decimal" placeholder="0.00"/></div>
+    <div style="margin-bottom:11px">
+      <div class="seclab">Losers (Payers)</div>
+      <div class="chips" id="mjLosChips"></div>
+    </div>
+    <div style="margin-bottom:11px">
+      <div class="seclab">Winners (Receivers)</div>
+      <div class="chips" id="mjWinChips"></div>
+    </div>
+    <div class="brow">
+      <button class="btn btn-p" id="addMjMultiBtn">Add Multi-Split</button>
+      <button class="btn btn-s btn-sm" id="rstMjBtn">Reset</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">📝</span>Transfers <span style="margin-left:auto;font-size:12px;font-weight:500;color:var(--muted)" id="mjTot"></span></div>
+    <div id="mjList"><div class="empty"><div class="eico">🀄</div><div class="etxt">No transfers yet</div></div></div>
+  </div>
+
+</div>
+
+<!-- ==================== TAB: SCANNER ==================== -->
+<div class="tab" id="tab-scanner">
+
+  <div class="alert alert-i"><span>📱</span><span>Upload a receipt photo — we'll extract items (simulated) and let you assign them to people.</span></div>
+
+  <div class="card">
+    <div class="ctitle"><span class="ico">📷</span>Receipt Scanner</div>
+    <div class="upzone" id="upZone">
+      <div class="up-ico">🧾</div>
+      <div class="up-txt">Tap to upload receipt</div>
+      <div class="up-sub">JPG · PNG · HEIC · any hawker receipt works</div>
+    </div>
+    <input type="file" id="rcpFile" accept="image/*" style="display:none"/>
+    <div class="spin-wrap" id="spinWrap">
+      <div class="spinner"></div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:5px" id="spinTxt">Scanning…</div>
+      <div style="font-size:12px;color:var(--muted)">Extracting items & amounts</div>
+    </div>
+  </div>
+
+  <div id="assignSec" style="display:none">
     <div class="card">
-      <h2>Results</h2>
-      <div class="muted">Net balance: positive = should receive, negative = should pay</div>
-      <div class="tableWrap">
-        <table id="balancesTable"></table>
+      <div class="ctitle"><span class="ico">✅</span>Assign Items to People</div>
+      <div class="alert alert-w"><span>✏️</span><span>Tap names to share an item. Edit descriptions or amounts inline.</span></div>
+      <div id="assignList"></div>
+      <div class="brow" style="margin-top:13px">
+        <button class="btn btn-p" id="importBtn2">Import All Items ✓</button>
+        <button class="btn btn-s" id="cancelScanBtn">Cancel</button>
       </div>
+    </div>
+  </div>
 
-      <div class="hr"></div>
+</div>
 
-      <h2>Minimal settlement</h2>
-      <div class="muted">Fewer payments (exact cents).</div>
-      <div class="tableWrap">
-        <table id="settlementTable"></table>
-      </div>
+<!-- ==================== TAB: RESULTS ==================== -->
+<div class="tab" id="tab-results">
 
-      <div class="hr"></div>
+  <div class="card">
+    <div class="ctitle"><span class="ico">💰</span>Session Summary</div>
+    <div class="sumgrid">
+      <div><div class="sumval" id="sumTotal" style="color:var(--primary)">$0.00</div><div class="sumlbl">Food Total</div></div>
+      <div><div class="sumval" id="sumItems" style="color:var(--gold)">0</div><div class="sumlbl">Items</div></div>
+      <div><div class="sumval" id="sumMj" style="color:var(--text)">0</div><div class="sumlbl">MJ Transfers</div></div>
+    </div>
+    <div class="strow">
+      <span class="stlbl">Sanity check (should be $0.00)</span>
+      <span class="stval" id="sanity">$0.00</span>
+    </div>
+  </div>
 
-      <h2>Sanity check</h2>
-      <div class="mono" id="sanity"></div>
+  <div class="card">
+    <div class="ctitle"><span class="ico">⚖️</span>Net Balances</div>
+    <div id="balList"><div class="empty"><div class="eico">📊</div><div class="etxt">Add entries to see results</div></div></div>
+  </div>
 
-      <div class="hr"></div>
+  <div class="card">
+    <div class="ctitle"><span class="ico">💸</span>Who Pays Who</div>
+    <div id="setList"><div class="empty"><div class="eico">✅</div><div class="etxt">No settlement needed</div></div></div>
+  </div>
 
-      <h2>History (local)</h2>
-      <div class="row2">
-        <div>
-          <label>Load a saved session</label>
-          <select id="historySelect"></select>
-        </div>
-        <div style="display:flex; align-items:flex-end; gap:10px;">
-          <button id="loadSessionBtn" class="secondary">Load</button>
-        </div>
-      </div>
+  <div class="card">
+    <div class="ctitle"><span class="ico">🧠</span>Fairness Engine</div>
+    <div id="fairBox"><div class="empty"><div class="eico">🤝</div><div class="etxt">Add items to check fairness</div></div></div>
+  </div>
 
-      <div class="hr"></div>
+  <div class="card">
+    <div class="ctitle"><span class="ico">💬</span>Social Mode</div>
+    <div class="brow">
+      <button class="btn btn-g" id="waBtn">📤 WhatsApp</button>
+      <button class="btn btn-s" id="cpBtn">📋 Copy Text</button>
+    </div>
+  </div>
 
-      <h2>Manage people</h2>
-      <div class="row2">
-        <div>
-          <label>Add name</label>
-          <input id="newPersonName" placeholder="e.g. Shawn" />
-        </div>
-        <div style="display:flex; align-items:flex-end; gap:10px;">
-          <button id="addPersonBtn" class="secondary">Add</button>
-        </div>
-      </div>
+</div>
 
-      <div class="hr"></div>
-
-      <h2>Backup</h2>
-      <div class="twoBtns">
-        <button id="exportBtn" class="secondary">Export JSON</button>
-        <button id="importBtn" class="secondary">Import JSON</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none;" />
-      </div>
-      <p class="mono" id="dbStatus"></p>
+<!-- MODAL: WHATSAPP -->
+<div class="mbg" id="waModal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📤 WhatsApp Message</div>
+    <div class="wa-pre" id="waPre"></div>
+    <div class="brow">
+      <button class="btn btn-g btn-full" id="waCpBtn">📋 Copy to Clipboard</button>
+      <button class="btn btn-s" id="waCloseBtn">Close</button>
     </div>
   </div>
 </div>
 
 <script>
 (() => {
-  const $ = (id) => document.getElementById(id);
+'use strict';
 
-  function escapeHtml(s) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
+// ──── UTILS ────
+const $  = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const uuid = () => crypto?.randomUUID?.() || 'id-'+Math.random().toString(36).slice(2)+Date.now();
+
+function parseCents(raw){
+  const s=String(raw??'').trim().replace(/[$,\s]/g,'');
+  if(!s||!/^\d+(\.\d{0,2})?$/.test(s))return null;
+  const[a,b='']= s.split('.');
+  return Number(a)*100+Number((b+'00').slice(0,2));
+}
+function fmt(cents){
+  const n=cents<0,a=Math.abs(cents);
+  return`${n?'-':''}$${Math.floor(a/100)}.${String(a%100).padStart(2,'0')}`;
+}
+function initials(n){return n.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'}
+function avColor(n){
+  const h=[160,200,240,280,320,20,40,60,80,110,140];
+  let x=0;for(let i=0;i<n.length;i++)x=(x*31+n.charCodeAt(i))%h.length;
+  return`hsl(${h[x]},38%,32%)`;
+}
+
+function toast(msg,type='',ms=2600){
+  const c=$('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;el.textContent=msg;
+  c.appendChild(el);setTimeout(()=>el.remove(),ms);
+}
+
+function mkToggle(el,init=false){
+  let on=init;
+  const up=()=>el.classList.toggle('on',on);up();
+  el.onclick=()=>{on=!on;up();el.dispatchEvent(new Event('change'))};
+  el.isOn=()=>on;el.setOn=v=>{on=v;up()};
+}
+
+// exact-cent even split
+function splitEven(totalCents,names){
+  const n=names.length;if(!n)return{};
+  const base=Math.floor(totalCents/n),rem=totalCents%n;
+  const out={};
+  [...names].sort().forEach((nm,i)=>out[nm]=base+(i<rem?1:0));
+  return out;
+}
+
+// minimal settlement
+function settle(net){
+  const pos=[],neg=[];
+  for(const[k,v]of Object.entries(net)){
+    if(v>0)pos.push([k,v]);else if(v<0)neg.push([k,-v]);
   }
-
-  function uuid() {
-    return (crypto?.randomUUID?.() || ("id-" + Math.random().toString(16).slice(2) + Date.now()));
+  pos.sort((a,b)=>b[1]-a[1]);neg.sort((a,b)=>b[1]-a[1]);
+  const tx=[];let i=0,j=0;
+  while(i<neg.length&&j<pos.length){
+    const pay=Math.min(neg[i][1],pos[j][1]);
+    if(pay>0)tx.push({from:neg[i][0],to:pos[j][0],cents:pay});
+    neg[i][1]-=pay;pos[j][1]-=pay;
+    if(neg[i][1]===0)i++;if(pos[j][1]===0)j++;
   }
+  return tx;
+}
 
-  function parseMoneyToCents(raw) {
-    const s = String(raw ?? "").trim();
-    if (!s) return null;
-    const cleaned = s.replace(/\$/g, "").replace(/,/g, "");
-    if (!/^\d+(\.\d{0,2})?$/.test(cleaned)) return null;
-    const [a, b=""] = cleaned.split(".");
-    const cents = Number(a) * 100 + Number((b + "00").slice(0,2));
-    if (!Number.isFinite(cents)) return null;
-    return cents;
+function isIAB(){
+  return/Telegram|WhatsApp|FBAN|FBAV|Instagram|Line\/|MicroMessenger/.test(navigator.userAgent||'');
+}
+
+// ──── INDEXEDDB ────
+const DB='splitlah_v2',STORE='sessions';
+let db;
+const openDB=()=>new Promise((res,rej)=>{
+  const r=indexedDB.open(DB,1);
+  r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE)){const s=d.createObjectStore(STORE,{keyPath:'id'});s.createIndex('byDate','date')}};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+});
+const dbPut=s=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put(s);t.oncomplete=res;t.onerror=()=>rej(t.error)});
+const dbAll=()=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readonly');const r=t.objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)});
+const dbGet=id=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readonly');const r=t.objectStore(STORE).get(id);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)});
+const dbDel=id=>new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).delete(id);t.oncomplete=res;t.onerror=()=>rej(t.error)});
+
+// ──── STATE ────
+const DEF_PEOPLE=['Ken','RY','PY','Cas','Dex','CT','JW','MY','Chelle'];
+let people=[...DEF_PEOPLE];
+let present=new Set(people);
+let sessId=null;
+
+// items: {id,desc,cents,paidBy,mode,among,weights}
+// mode: equal|custom|percent|appetite
+// among: [name,...] for equal/custom
+// weights: {name:num} for percent (pct 0-100) / appetite (1-5)
+let items=[];
+let mj=[]; // {id,from,to,cents}
+
+// form state
+let curMode='equal';
+let eqSet=new Set([...present]);
+let cusSet=new Set([...present]);
+let pctMap={};  // name->pct
+let appMap={};  // name->appetite 1-5
+
+// MJ multi
+let mjLos=new Set();
+let mjWin=new Set();
+
+// scanner
+let scanned=[]; // {id,desc,cents,by:Set}
+
+// settings
+let ignoreMicro=false;
+let microCents=300;
+
+// ──── CALC ────
+function getActive(){
+  return ignoreMicro ? items.filter(it=>it.cents>=microCents) : items;
+}
+
+function calcNet(){
+  const net={};
+  [...present].sort().forEach(n=>net[n]=0);
+  for(const it of getActive()){
+    if(!(it.paidBy in net))continue;
+    net[it.paidBy]+=it.cents;
+    const sh=itemShares(it,net);
+    for(const[nm,v]of Object.entries(sh))if(nm in net)net[nm]-=v;
   }
-
-  function centsToMoney(cents) {
-    const sign = cents < 0 ? "-" : "";
-    const abs = Math.abs(cents);
-    const dollars = Math.floor(abs / 100);
-    const rem = abs % 100;
-    return `${sign}$${dollars}.${String(rem).padStart(2,"0")}`;
+  for(const e of mj){
+    if(!(e.from in net)||!(e.to in net))continue;
+    net[e.from]-=e.cents;net[e.to]+=e.cents;
   }
+  return net;
+}
 
-  function splitCentsEvenly(totalCents, namesSorted) {
-    const n = namesSorted.length;
-    const base = Math.floor(totalCents / n);
-    const r = totalCents % n;
-    const shares = new Map();
-    namesSorted.forEach((name, idx) => {
-      shares.set(name, base + (idx < r ? 1 : 0));
-    });
-    return shares;
+function itemShares(it,net){
+  const sh={};
+  if(it.mode==='equal'||it.mode==='custom'){
+    const g=(it.among||[]).filter(n=>n in net).sort();
+    if(!g.length)return sh;
+    return splitEven(it.cents,g);
   }
-
-  function computeSettlementCents(net) {
-    const creditors = [];
-    const debtors = [];
-    for (const [name, cents] of Object.entries(net)) {
-      if (cents > 0) creditors.push([name, cents]);
-      else if (cents < 0) debtors.push([name, -cents]);
-    }
-    creditors.sort((a,b)=>b[1]-a[1]);
-    debtors.sort((a,b)=>b[1]-a[1]);
-
-    const tx = [];
-    let i=0, j=0;
-    while (i < debtors.length && j < creditors.length) {
-      const [dName, dAmt] = debtors[i];
-      const [cName, cAmt] = creditors[j];
-      const pay = Math.min(dAmt, cAmt);
-      if (pay > 0) tx.push({ from: dName, to: cName, cents: pay });
-      debtors[i][1] = dAmt - pay;
-      creditors[j][1] = cAmt - pay;
-      if (debtors[i][1] === 0) i++;
-      if (creditors[j][1] === 0) j++;
-    }
-    return tx;
-  }
-
-  // Detect in-app browsers (not perfect, but good enough)
-  function detectInAppBrowser() {
-    const ua = navigator.userAgent || "";
-    const isTelegram = ua.includes("Telegram");
-    const isWhatsApp = ua.includes("WhatsApp");
-    const isFB = ua.includes("FBAN") || ua.includes("FBAV") || ua.includes("Instagram");
-    const isLine = ua.includes("Line/");
-    const isWeChat = ua.includes("MicroMessenger");
-    return isTelegram || isWhatsApp || isFB || isLine || isWeChat;
-  }
-
-  // -------------------------
-  // IndexedDB
-  // -------------------------
-  const DB_NAME = "mahjong_splitter_db";
-  const DB_VERSION = 1;
-  const STORE = "sessions";
-  let db;
-
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE)) {
-          const st = db.createObjectStore(STORE, { keyPath: "id" });
-          st.createIndex("byDate", "date");
-        }
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  function dbPut(session) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(session);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  function dbGetAll() {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  function dbGet(id) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).get(id);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  function dbDelete(id) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).delete(id);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  // -------------------------
-  // App state
-  // -------------------------
-  const DEFAULT_PEOPLE = ["Ken","RY","PY","Cas","Dex","CT","JW","MY","Chelle"];
-  let people = [];
-  let present = new Set();
-  let currentSessionId = null;
-
-  let items = []; // {id, desc, cents, paidBy, splitAmong}
-  let mj = [];    // {id, from, to, cents}
-
-  let customSplitSet = new Set();
-  let mjLosersSet = new Set();
-  let mjWinnersSet = new Set();
-
-  // -------------------------
-  // UI render
-  // -------------------------
-  function renderPeopleChips() {
-    const el = $("peopleChips");
-    el.innerHTML = "";
-    people.forEach(name => {
-      const chip = document.createElement("div");
-      chip.className = "chip" + (present.has(name) ? " active" : "");
-      chip.textContent = name;
-      chip.onclick = () => {
-        if (present.has(name)) present.delete(name); else present.add(name);
-        customSplitSet = new Set([...customSplitSet].filter(n => present.has(n)));
-        mjLosersSet = new Set([...mjLosersSet].filter(n => present.has(n)));
-        mjWinnersSet = new Set([...mjWinnersSet].filter(n => present.has(n)));
-        renderPeopleChips();
-        renderSelectOptions();
-        renderCustomSplitChips();
-        renderMjLosersChips();
-        renderMjWinnersChips();
-        renderItemsTable();
-        renderMjTable();
-        recalc();
-      };
-      el.appendChild(chip);
+  if(it.mode==='percent'||it.mode==='appetite'){
+    const w=it.weights||{};
+    const tw=Object.values(w).reduce((a,b)=>a+b,0)||1;
+    let rem=it.cents;
+    const ns=Object.keys(w).filter(n=>n in net).sort();
+    ns.forEach((n,i)=>{
+      const s=i===ns.length-1?rem:Math.floor(it.cents*w[n]/tw);
+      sh[n]=s;rem-=s;
     });
   }
+  return sh;
+}
 
-  function renderSelectOptions() {
-    const selects = [ $("itemPaidBy"), $("mjLoser"), $("mjWinner") ];
-    const presentList = Array.from(present).sort();
-    selects.forEach(sel => {
-      const current = sel.value;
-      sel.innerHTML = "";
-      presentList.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name; opt.textContent = name;
-        sel.appendChild(opt);
-      });
-      if (presentList.includes(current)) sel.value = current;
-    });
+function recalc(){
+  const net=calcNet();
+  renderBal(net);
+  renderSet(settle(net));
+  renderFairness(net);
+  renderSummary(net);
+  updateBadges();
+  updateHdr();
+}
+
+// ──── RENDER: RESULTS ────
+function renderSummary(net){
+  const act=getActive();
+  const foodTotal=act.reduce((s,i)=>s+i.cents,0);
+  $('sumTotal').textContent=fmt(foodTotal);
+  $('sumItems').textContent=act.length;
+  $('sumMj').textContent=mj.length;
+  const sum=Object.values(net).reduce((a,b)=>a+b,0);
+  const el=$('sanity');
+  el.textContent=fmt(sum);
+  el.style.color=sum===0?'var(--green)':'var(--red)';
+}
+
+function renderBal(net){
+  const el=$('balList');
+  const list=Object.entries(net).sort((a,b)=>b[1]-a[1]);
+  if(!list.length){el.innerHTML='<div class="empty"><div class="eico">📊</div><div class="etxt">Add entries to see results</div></div>';return}
+  el.innerHTML=list.map(([name,cents])=>{
+    const cls=cents>0?'pos':cents<0?'neg':'zero';
+    const lbl=cents>0?'← receives':cents<0?'→ pays':'settled ✓';
+    return`<div class="bcard">
+      <div class="bav" style="background:${avColor(name)}">${esc(initials(name))}</div>
+      <div><div class="bname">${esc(name)}</div><div class="bdetail">${lbl}</div></div>
+      <div class="bamt ${cls}">${fmt(cents)}</div></div>`;
+  }).join('');
+}
+
+function renderSet(tx){
+  const el=$('setList');
+  if(!tx.length){el.innerHTML='<div class="empty"><div class="eico">✅</div><div class="etxt">Everyone is settled up!</div></div>';return}
+  el.innerHTML=tx.map(t=>`<div class="srow">
+    <span class="sfrom">${esc(t.from)}</span>
+    <span style="color:var(--muted);font-size:16px">→</span>
+    <span class="sto">${esc(t.to)}</span>
+    <span class="samt">${fmt(t.cents)}</span></div>`).join('');
+}
+
+function renderFairness(net){
+  const el=$('fairBox');
+  const act=getActive();
+  const names=Object.keys(net);
+  if(!act.length||!names.length){el.innerHTML='<div class="empty"><div class="eico">🤝</div><div class="etxt">Add food items to check fairness</div></div>';return}
+
+  const foodOwed={};names.forEach(n=>foodOwed[n]=0);
+  for(const it of act){
+    const sh=itemShares(it,foodOwed);
+    for(const[nm,v]of Object.entries(sh))if(nm in foodOwed)foodOwed[nm]+=v;
   }
 
-  function renderCustomSplitChips() {
-    const wrap = $("customSplitChips");
-    wrap.innerHTML = "";
-    people.forEach(name => {
-      const chip = document.createElement("div");
-      chip.className = "chip" + (customSplitSet.has(name) ? " active" : "");
-      chip.textContent = name;
-      chip.onclick = () => {
-        if (customSplitSet.has(name)) customSplitSet.delete(name);
-        else customSplitSet.add(name);
-        renderCustomSplitChips();
-      };
-      wrap.appendChild(chip);
-    });
+  const total=act.reduce((s,i)=>s+i.cents,0);
+  const maxOwed=Math.max(...Object.values(foodOwed),1);
+  const vals=Object.values(foodOwed).filter(v=>v>0);
+  const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+
+  let html='';
+  const outliers=Object.entries(foodOwed).filter(([,v])=>avg>0&&(v>avg*1.5||(v<avg*0.5&&v>0)));
+  if(outliers.length){
+    html+=`<div class="alert alert-w"><span>⚠️</span><span>Uneven split detected: <strong>${outliers.map(([n])=>esc(n)).join(', ')}</strong> have significantly different shares. Consider reviewing the split mode.</span></div>`;
+  }else if(vals.length>1){
+    html+=`<div class="alert alert-i"><span>✅</span><span>Food split looks reasonably fair across everyone.</span></div>`;
   }
 
-  function renderMjLosersChips() {
-    const wrap = $("mjLosersChips");
-    wrap.innerHTML = "";
-    Array.from(present).sort().forEach(name => {
-      const chip = document.createElement("div");
-      chip.className = "chip" + (mjLosersSet.has(name) ? " active" : "");
-      chip.textContent = name;
-      chip.onclick = () => {
-        if (mjLosersSet.has(name)) mjLosersSet.delete(name);
-        else mjLosersSet.add(name);
-        if (mjLosersSet.has(name)) mjWinnersSet.delete(name);
-        renderMjLosersChips();
-        renderMjWinnersChips();
-      };
-      wrap.appendChild(chip);
-    });
+  html+=`<div class="seclab" style="margin-top:${outliers.length?'6px':'0'}">Food Consumption Share</div>`;
+  html+=Object.entries(foodOwed).sort((a,b)=>b[1]-a[1]).map(([name,owed])=>{
+    const pct=maxOwed>0?Math.round(owed/maxOwed*100):0;
+    const pctOfTotal=total>0?Math.round(owed/total*100):0;
+    const bc=pct>75?'bar-r':pct>50?'bar-gold':'bar-g';
+    return`<div class="fb-wrap">
+      <div class="fb-label"><span>${esc(name)}</span><span style="color:var(--muted)">${fmt(owed)} (${pctOfTotal}%)</span></div>
+      <div class="fb"><div class="fb-fill ${bc}" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+  el.innerHTML=html;
+}
+
+// ──── RENDER: ITEMS ────
+function renderItems(){
+  const el=$('itemsList');
+  $('itemsTot').textContent=items.length?fmt(items.reduce((s,i)=>s+i.cents,0))+' total':'';
+  if(!items.length){el.innerHTML='<div class="empty"><div class="eico">🍽️</div><div class="etxt">No items yet — add some food!</div></div>';return}
+
+  el.innerHTML=items.map(it=>{
+    const micro=it.cents<microCents;
+    const ignored=ignoreMicro&&micro;
+    const modeEmoji={equal:'⚖️',custom:'👥',percent:'📊',appetite:'🍽️'}[it.mode]||'';
+    const who=it.mode==='equal'||it.mode==='custom'
+      ?(it.among||[]).join(', ')
+      :Object.keys(it.weights||{}).join(', ');
+    return`<div class="irow ${ignored?'ignored':''}" data-id="${it.id}">
+      <div class="imain">
+        <div class="idesc">${esc(it.desc||'Item')}</div>
+        <div class="imeta">
+          <span>Paid <strong>${esc(it.paidBy)}</strong></span>
+          <span>${modeEmoji} ${it.mode}</span>
+          <span class="tag tgrey" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(who)}</span>
+          ${micro?'<span class="micro-badge">micro</span>':''}
+          ${ignored?'<span class="tag tgold">ignored</span>':''}
+        </div>
+      </div>
+      <div class="iamt">${fmt(it.cents)}</div>
+      <button class="btn btn-d btn-sm del-item" data-id="${it.id}">✕</button></div>`;
+  }).join('');
+}
+
+// ──── RENDER: MJ ────
+function renderMj(){
+  const el=$('mjList');
+  const tot=mj.reduce((s,e)=>s+e.cents,0);
+  $('mjTot').textContent=mj.length?fmt(tot)+' total':'';
+  if(!mj.length){el.innerHTML='<div class="empty"><div class="eico">🀄</div><div class="etxt">No transfers yet</div></div>';return}
+  el.innerHTML=mj.map(e=>`<div class="mrow" data-id="${e.id}">
+    <span class="mfrom">${esc(e.from)}</span>
+    <span style="color:var(--muted)">→</span>
+    <span class="mto">${esc(e.to)}</span>
+    <span class="mamt">${fmt(e.cents)}</span>
+    <button class="btn btn-d btn-sm del-mj" data-id="${e.id}">✕</button></div>`).join('');
+}
+
+// ──── RENDER: SESSION ────
+function renderGrid(){
+  const el=$('personGrid');
+  el.innerHTML=people.map(nm=>{
+    const on=present.has(nm);
+    const col=avColor(nm);
+    return`<div class="pcard ${on?'on':''}" data-name="${esc(nm)}">
+      <div class="av" style="background:${on?col:'#c5bdb0'}">${esc(initials(nm))}</div>
+      <div class="pn">${esc(nm)}</div>
+      <div class="ps">${on?'present':'absent'}</div></div>`;
+  }).join('');
+}
+
+function renderSels(){
+  const pl=[...present].sort();
+  [$('itemPaid'),$('mjLoser'),$('mjWinner')].forEach(sel=>{
+    const cur=sel.value;
+    sel.innerHTML=pl.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    if(pl.includes(cur))sel.value=cur;
+  });
+}
+
+// ──── RENDER: SPLIT MODE UI ────
+function renderModeUI(){
+  const pl=[...present].sort();
+
+  // Equal chips
+  $('eqChips').innerHTML=pl.map(nm=>`<div class="chip ${eqSet.has(nm)?'on':''}" data-eq="${esc(nm)}">${esc(nm)}</div>`).join('');
+
+  // Custom chips
+  $('cusChips').innerHTML=pl.map(nm=>`<div class="chip ${cusSet.has(nm)?'on':''}" data-cus="${esc(nm)}">${esc(nm)}</div>`).join('');
+
+  // Percent sliders
+  pl.forEach(nm=>{if(!(nm in pctMap))pctMap[nm]=Math.floor(100/pl.length)});
+  $('pctSliders').innerHTML=pl.map(nm=>`<div class="slrow">
+    <span class="slname">${esc(nm)}</span>
+    <input type="range" min="0" max="100" value="${pctMap[nm]||0}" data-pct="${esc(nm)}"/>
+    <span class="slval" id="pv-${esc(nm)}">${pctMap[nm]||0}%</span></div>`).join('');
+  updPctTotal();
+
+  // Appetite sliders
+  pl.forEach(nm=>{if(!(nm in appMap))appMap[nm]=3});
+  const appEmoji=['','🥗','🍜','🍱','🍖','🍔'];
+  $('appSliders').innerHTML=pl.map(nm=>`<div class="slrow">
+    <span class="slname">${esc(nm)}</span>
+    <input type="range" min="1" max="5" value="${appMap[nm]||3}" data-app="${esc(nm)}"/>
+    <span class="slval" id="av-${esc(nm)}">${appEmoji[appMap[nm]||3]}</span></div>`).join('');
+}
+
+function updPctTotal(){
+  const pl=[...present].sort();
+  const tot=pl.reduce((s,n)=>s+(pctMap[n]||0),0);
+  const el=$('pctTotal');
+  el.textContent=`${tot}% / 100%`;
+  el.className='pct-total '+(tot===100?'pct-ok':'pct-bad');
+}
+
+// ──── RENDER: MJ CHIPS ────
+function renderMjChips(){
+  const pl=[...present].sort();
+  $('mjLosChips').innerHTML=pl.map(nm=>`<div class="chip ${mjLos.has(nm)?'loser':''}" data-mlos="${esc(nm)}">${esc(nm)}</div>`).join('');
+  $('mjWinChips').innerHTML=pl.map(nm=>`<div class="chip ${mjWin.has(nm)?'winner':''}" data-mwin="${esc(nm)}">${esc(nm)}</div>`).join('');
+}
+
+// ──── RENDER ALL ────
+function renderAll(){
+  renderGrid();renderSels();renderModeUI();renderMjChips();renderItems();renderMj();
+}
+
+function updateBadges(){
+  const ib=$('iBadge');ib.textContent=items.length;ib.style.display=items.length?'':'none';
+  const mb=$('mBadge');mb.textContent=mj.length;mb.style.display=mj.length?'':'none';
+}
+
+function updateHdr(){
+  $('hdrSub').textContent=`${present.size} pax · ${items.length} items · ${mj.length} MJ`;
+  $('paxPill').textContent=present.size+' pax';
+}
+
+// ──── TABS ────
+function goTab(tabId){
+  document.querySelectorAll('.tab').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  const p=document.getElementById('tab-'+tabId);if(p)p.classList.add('on');
+  document.querySelector(`.nav-btn[data-tab="${tabId}"]`)?.classList.add('on');
+  if(tabId==='results')recalc();
+}
+
+// ──── SESSION SAVE/LOAD ────
+function getSessObj(){
+  return{id:sessId||uuid(),name:$('sessName').value.trim()||'Untitled',date:$('sessDate').value||new Date().toISOString().slice(0,10),venue:$('sessVenue').value.trim(),people:[...people],present:[...present],items,mj,updatedAt:new Date().toISOString()};
+}
+function loadSessObj(s){
+  sessId=s.id;$('delSessBtn').disabled=false;
+  $('sessName').value=s.name||'';$('sessDate').value=s.date||new Date().toISOString().slice(0,10);$('sessVenue').value=s.venue||'';
+  people=Array.isArray(s.people)&&s.people.length?[...s.people]:[...DEF_PEOPLE];
+  present=new Set(Array.isArray(s.present)?s.present:[]);
+  items=Array.isArray(s.items)?s.items:[];mj=Array.isArray(s.mj)?s.mj:[];
+  eqSet=new Set([...present]);cusSet=new Set([...present]);
+  mjLos=new Set();mjWin=new Set();
+  renderAll();recalc();
+}
+function newSess(){
+  sessId=null;$('delSessBtn').disabled=true;
+  $('sessName').value='';$('sessDate').value=new Date().toISOString().slice(0,10);$('sessVenue').value='';
+  items=[];mj=[];present=new Set([...people]);
+  eqSet=new Set([...present]);cusSet=new Set([...present]);
+  mjLos=new Set();mjWin=new Set();
+  renderAll();recalc();
+}
+async function refreshHist(){
+  const all=await dbAll();
+  all.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const sel=$('histSel');
+  if(!all.length){sel.innerHTML='<option value="">(no saved sessions)</option>';return}
+  sel.innerHTML=all.map(s=>`<option value="${s.id}">${s.date||''} — ${s.name||'Untitled'} (${(s.present||[]).length} pax)</option>`).join('');
+}
+async function exportAll(){
+  const all=await dbAll();
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),sessions:all},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='splitlah_backup.json';a.click();URL.revokeObjectURL(a.href);
+  toast('Exported!','ok');
+}
+
+// ──── MJ MULTI SPLIT ────
+function addMultiSplit(totalCents,losers,winners){
+  const ls=[...losers].sort(),ws=[...winners].sort();
+  const psh=splitEven(totalCents,ls),rsh=splitEven(totalCents,ws);
+  const net={};
+  ls.forEach(n=>net[n]=(net[n]||0)-psh[n]);
+  ws.forEach(n=>net[n]=(net[n]||0)+rsh[n]);
+  settle(net).forEach(t=>mj.push({id:uuid(),from:t.from,to:t.to,cents:t.cents}));
+}
+
+// ──── SCANNER ────
+const MOCKS=[
+  [{desc:'Char Kway Teow',cents:450},{desc:'Hokkien Mee',cents:550},{desc:'Oyster Omelette',cents:600},{desc:'Satay (10 sticks)',cents:1200},{desc:'Carrot Cake (Black)',cents:400},{desc:'Sugarcane Juice ×4',cents:500},{desc:'Tiger Beer ×2',cents:800}],
+  [{desc:'BBQ Stingray',cents:2800},{desc:'Chili Crab (500g)',cents:4800},{desc:'Fried Mantou ×4',cents:600},{desc:'Coconut Water ×3',cents:750},{desc:'Fried Rice',cents:900},{desc:'Ice Kachang ×2',cents:500}],
+  [{desc:'Bak Kut Teh',cents:1100},{desc:'Prawn Noodle (dry)',cents:850},{desc:'Lor Mee',cents:650},{desc:'Teh Tarik ×4',cents:600},{desc:'Youtiao ×2',cents:280},{desc:'Kaya Toast Set ×2',cents:700}],
+  [{desc:'Nasi Lemak',cents:450},{desc:'Roti Prata (2 plain)',cents:320},{desc:'Milo Dinosaur ×3',cents:750},{desc:'Chicken Rice',cents:500},{desc:'Laksa',cents:600},{desc:'Bandung ×2',cents:400}],
+];
+
+function startScan(file){
+  $('upZone').style.display='none';$('spinWrap').style.display='block';$('assignSec').style.display='none';
+  const steps=['Reading receipt…','Detecting items…','Parsing amounts…','Finalising…'];
+  let step=0;
+  const iv=setInterval(()=>{if(step<steps.length)$('spinTxt').textContent=steps[step++]},650);
+  setTimeout(()=>{
+    clearInterval(iv);$('spinWrap').style.display='none';$('upZone').style.display='';
+    scanned=MOCKS[Math.floor(Math.random()*MOCKS.length)].map(it=>({...it,id:uuid(),by:new Set([...present])}));
+    renderAssign();
+    $('assignSec').style.display='block';
+    toast('Receipt scanned! Assign items below 👇','ok',3500);
+  },2800);
+}
+
+function renderAssign(){
+  const pl=[...present].sort();
+  $('assignList').innerHTML=scanned.map((it,idx)=>`
+    <div class="aitem">
+      <div class="aheader">
+        <input class="aname scan-desc" data-idx="${idx}" value="${esc(it.desc)}" style="border:none;background:transparent;font-size:14px;font-weight:600;padding:0;outline:none;width:100%"/>
+        <span style="display:flex;align-items:center;gap:3px;white-space:nowrap">$<input class="aamt scan-amt" data-idx="${idx}" value="${(it.cents/100).toFixed(2)}" inputmode="decimal" style="border:none;background:transparent;font-size:14px;font-weight:700;padding:0;outline:none;width:56px;text-align:right"/></span>
+      </div>
+      <div class="achips">${pl.map(nm=>`<div class="achip ${it.by.has(nm)?'on':''}" data-aidx="${idx}" data-anm="${esc(nm)}">${esc(nm)}</div>`).join('')}</div>
+    </div>`).join('');
+}
+
+function importScanned(){
+  const paidBy=[...present][0]||people[0];let added=0;
+  for(const it of scanned){
+    const among=[...it.by].filter(n=>present.has(n));
+    if(!among.length)continue;
+    items.push({id:uuid(),desc:it.desc,cents:it.cents,paidBy,mode:'equal',among,weights:null});added++;
+  }
+  scanned=[];$('assignSec').style.display='none';
+  renderItems();recalc();goTab('items');
+  toast(`${added} items imported! Set who paid in Items tab.`,'ok',4000);
+}
+
+// ──── WHATSAPP ────
+function genWa(){
+  const net=calcNet();
+  const tx=settle(net);
+  const act=getActive();
+  const name=$('sessName').value.trim()||'Our Session';
+  const date=$('sessDate').value||new Date().toISOString().slice(0,10);
+  const venue=$('sessVenue').value.trim();
+  const foodTotal=act.reduce((s,i)=>s+i.cents,0);
+
+  let msg=`🀄 *SplitLah! – ${name}*\n`;
+  msg+=`📅 ${date}${venue?` @ ${venue}`:''}\n`;
+  msg+=`👥 ${[...present].sort().join(', ')}\n`;
+  msg+=`💰 Food total: ${fmt(foodTotal)}`;
+  if(ignoreMicro)msg+=` (micro-charges excluded)`;
+  msg+=`\n\n`;
+
+  if(!tx.length){msg+=`✅ *Everyone is settled up!*\n`;}
+  else{
+    msg+=`*Who pays who:*\n`;
+    tx.forEach(t=>msg+=`• ${t.from} → ${t.to}: *${fmt(t.cents)}*\n`);
   }
 
-  function renderMjWinnersChips() {
-    const wrap = $("mjMultiWinnersChips");
-    wrap.innerHTML = "";
-    Array.from(present).sort().forEach(name => {
-      const chip = document.createElement("div");
-      chip.className = "chip" + (mjWinnersSet.has(name) ? " active" : "");
-      chip.textContent = name;
-      chip.onclick = () => {
-        if (mjWinnersSet.has(name)) mjWinnersSet.delete(name);
-        else mjWinnersSet.add(name);
-        if (mjWinnersSet.has(name)) mjLosersSet.delete(name);
-        renderMjLosersChips();
-        renderMjWinnersChips();
-      };
-      wrap.appendChild(chip);
-    });
+  msg+=`\n*Net balances:*\n`;
+  Object.entries(net).sort((a,b)=>b[1]-a[1]).forEach(([n,c])=>{
+    const ico=c>0?'🟢':c<0?'🔴':'⚪';
+    msg+=`${ico} ${n}: ${fmt(c)}\n`;
+  });
+
+  if(mj.length){
+    msg+=`\n*Mahjong transfers:*\n`;
+    mj.forEach(e=>msg+=`• ${e.from} → ${e.to}: ${fmt(e.cents)}\n`);
   }
 
-  function renderItemsTable() {
-    const t = $("itemsTable");
-    if (!items.length) {
-      t.innerHTML = "<tr><td class='muted'>No items yet</td></tr>";
-      return;
-    }
-    t.innerHTML = `
-      <tr>
-        <th>Item</th><th class="right">Amt</th><th>Paid</th><th>Split</th><th></th>
-      </tr>
-    `;
-    items.forEach(it => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(it.desc || "(item)")}</td>
-        <td class="right">${centsToMoney(it.cents)}</td>
-        <td>${escapeHtml(it.paidBy)}</td>
-        <td><span class="pill">${it.splitAmong.length} ppl</span> <span class="muted">${escapeHtml(it.splitAmong.join(", "))}</span></td>
-        <td class="right"><button class="secondary">Del</button></td>
-      `;
-      tr.querySelector("button").onclick = () => {
-        items = items.filter(x => x.id !== it.id);
-        renderItemsTable();
-        recalc();
-      };
-      t.appendChild(tr);
-    });
-  }
+  msg+=`\n_Generated by SplitLah! 🀄_`;
+  return msg;
+}
 
-  function renderMjTable() {
-    const t = $("mjTable");
-    if (!mj.length) {
-      t.innerHTML = "<tr><td class='muted'>No mahjong entries yet</td></tr>";
-      return;
-    }
-    t.innerHTML = `
-      <tr>
-        <th>From</th><th>To</th><th class="right">Amt</th><th></th>
-      </tr>
-    `;
-    mj.forEach(e => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(e.from)}</td>
-        <td>${escapeHtml(e.to)}</td>
-        <td class="right">${centsToMoney(e.cents)}</td>
-        <td class="right"><button class="secondary">Del</button></td>
-      `;
-      tr.querySelector("button").onclick = () => {
-        mj = mj.filter(x => x.id !== e.id);
-        renderMjTable();
-        recalc();
-      };
-      t.appendChild(tr);
-    });
-  }
+// ──── EVENTS ────
+function bindEvents(){
 
-  function renderBalances(net) {
-    const t = $("balancesTable");
-    const list = Object.entries(net).sort((a,b)=>b[1]-a[1]);
-    if (!list.length) {
-      t.innerHTML = "<tr><td class='muted'>Add entries to see results</td></tr>";
-      return;
-    }
-    t.innerHTML = "<tr><th>Name</th><th class='right'>Net</th></tr>";
-    list.forEach(([name, cents]) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${escapeHtml(name)}</td><td class="right">${centsToMoney(cents)}</td>`;
-      t.appendChild(tr);
-    });
-  }
+  // Nav tabs
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.onclick=()=>goTab(b.dataset.tab);
+  });
 
-  function renderSettlement(tx) {
-    const t = $("settlementTable");
-    if (!tx.length) {
-      t.innerHTML = "<tr><td class='muted'>No settlement needed (or no entries)</td></tr>";
-      return;
-    }
-    t.innerHTML = "<tr><th>Payer</th><th>Receiver</th><th class='right'>Amount</th></tr>";
-    tx.forEach(x => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${escapeHtml(x.from)}</td><td>${escapeHtml(x.to)}</td><td class="right">${centsToMoney(x.cents)}</td>`;
-      t.appendChild(tr);
-    });
-  }
+  // Split mode tabs
+  $('smTabs').onclick=e=>{
+    const tab=e.target.closest('.sm-tab');if(!tab)return;
+    document.querySelectorAll('.sm-tab').forEach(t=>t.classList.remove('on'));
+    tab.classList.add('on');curMode=tab.dataset.mode;
+    const modes={equal:'modeEqual',custom:'modeCustom',percent:'modePct',appetite:'modeApp'};
+    Object.entries(modes).forEach(([m,id])=>$(id).style.display=curMode===m?'':'none');
+    renderModeUI();
+  };
 
-  // -------------------------
-  // Core calc
-  // -------------------------
-  function recalc() {
-    const net = {};
-    const presentList = Array.from(present).sort();
-    presentList.forEach(n => net[n] = 0);
+  // Equal chips
+  $('eqChips').onclick=e=>{
+    const c=e.target.closest('[data-eq]');if(!c)return;
+    const nm=c.dataset.eq;eqSet.has(nm)?eqSet.delete(nm):eqSet.add(nm);
+    c.classList.toggle('on',eqSet.has(nm));
+  };
 
-    for (const it of items) {
-      if (!net.hasOwnProperty(it.paidBy)) continue;
-      net[it.paidBy] += it.cents;
+  // Custom chips
+  $('cusChips').onclick=e=>{
+    const c=e.target.closest('[data-cus]');if(!c)return;
+    const nm=c.dataset.cus;cusSet.has(nm)?cusSet.delete(nm):cusSet.add(nm);
+    c.classList.toggle('on',cusSet.has(nm));
+  };
 
-      const group = it.splitAmong.filter(n => net.hasOwnProperty(n)).slice().sort();
-      if (!group.length) continue;
+  // Pct sliders
+  $('pctSliders').oninput=e=>{
+    if(!e.target.dataset.pct)return;
+    const nm=e.target.dataset.pct;pctMap[nm]=Number(e.target.value);
+    const el=document.getElementById('pv-'+nm);if(el)el.textContent=e.target.value+'%';
+    updPctTotal();
+  };
 
-      const shares = splitCentsEvenly(it.cents, group);
-      for (const name of group) net[name] -= shares.get(name);
-    }
+  // Appetite sliders
+  const appEmoji=['','🥗','🍜','🍱','🍖','🍔'];
+  $('appSliders').oninput=e=>{
+    if(!e.target.dataset.app)return;
+    const nm=e.target.dataset.app;appMap[nm]=Number(e.target.value);
+    const el=document.getElementById('av-'+nm);if(el)el.textContent=appEmoji[Number(e.target.value)];
+  };
 
-    for (const e of mj) {
-      if (!net.hasOwnProperty(e.from) || !net.hasOwnProperty(e.to)) continue;
-      net[e.from] -= e.cents;
-      net[e.to] += e.cents;
-    }
+  // Add item
+  $('addItemBtn').onclick=()=>{
+    if(!present.size)return toast('No one is present!','err');
+    const desc=$('itemDesc').value.trim();
+    const cents=parseCents($('itemAmt').value);
+    const paidBy=$('itemPaid').value;
+    if(!paidBy)return toast('Pick who paid','err');
+    if(!cents||cents<=0)return toast('Enter a valid amount','err');
 
-    renderBalances(net);
-    renderSettlement(computeSettlementCents(net));
-
-    const sum = Object.values(net).reduce((a,b)=>a+b, 0);
-    $("sanity").textContent =
-      `Net sum (should be $0.00): ${centsToMoney(sum)} • Present: ${presentList.length} • Items: ${items.length} • MJ: ${mj.length}`;
-  }
-
-  // Multi-losers -> Multi-winners (total amount)
-  function addMultiLosersToWinners(totalCents, losers, winners) {
-    const losersSorted = losers.slice().sort();
-    const winnersSorted = winners.slice().sort();
-
-    const payShares = splitCentsEvenly(totalCents, losersSorted);
-    const recvShares = splitCentsEvenly(totalCents, winnersSorted);
-
-    const net = {};
-    losersSorted.forEach(n => net[n] = (net[n] || 0) - payShares.get(n));
-    winnersSorted.forEach(n => net[n] = (net[n] || 0) + recvShares.get(n));
-
-    const tx = computeSettlementCents(net);
-    tx.forEach(t => mj.push({ id: uuid(), from: t.from, to: t.to, cents: t.cents }));
-  }
-
-  // -------------------------
-  // Session save/load
-  // -------------------------
-  function getSessionObj() {
-    const name = $("sessionName").value.trim() || "Untitled session";
-    const date = $("sessionDate").value || new Date().toISOString().slice(0,10);
-    return {
-      id: currentSessionId || uuid(),
-      name,
-      date,
-      people: [...people],
-      present: [...present],
-      items,
-      mj,
-      updatedAt: new Date().toISOString()
-    };
-  }
-
-  function loadSessionObj(s) {
-    currentSessionId = s.id;
-    $("deleteSessionBtn").disabled = false;
-    $("sessionName").value = s.name || "";
-    $("sessionDate").value = s.date || new Date().toISOString().slice(0,10);
-
-    people = Array.isArray(s.people) && s.people.length ? s.people : [...DEFAULT_PEOPLE];
-    present = new Set(Array.isArray(s.present) ? s.present : []);
-    items = Array.isArray(s.items) ? s.items : [];
-    mj = Array.isArray(s.mj) ? s.mj : [];
-
-    customSplitSet = new Set([...present]);
-    mjLosersSet = new Set();
-    mjWinnersSet = new Set();
-
-    renderPeopleChips();
-    renderSelectOptions();
-    renderCustomSplitChips();
-    renderMjLosersChips();
-    renderMjWinnersChips();
-    renderItemsTable();
-    renderMjTable();
-    recalc();
-  }
-
-  function newSession() {
-    currentSessionId = null;
-    $("deleteSessionBtn").disabled = true;
-
-    $("sessionName").value = "";
-    $("sessionDate").value = new Date().toISOString().slice(0,10);
-
-    items = [];
-    mj = [];
-    present = new Set([...people]);
-
-    customSplitSet = new Set([...present]);
-    mjLosersSet = new Set();
-    mjWinnersSet = new Set();
-
-    $("mjMultiTotal").value = "";
-    $("mjMultiQuick").value = "none";
-
-    renderPeopleChips();
-    renderSelectOptions();
-    renderCustomSplitChips();
-    renderMjLosersChips();
-    renderMjWinnersChips();
-    renderItemsTable();
-    renderMjTable();
-    recalc();
-  }
-
-  async function refreshHistory() {
-    const all = await dbGetAll();
-    all.sort((a,b)=> (b.date||"").localeCompare(a.date||"") || (b.updatedAt||"").localeCompare(a.updatedAt||""));
-    const sel = $("historySelect");
-    sel.innerHTML = "";
-    if (!all.length) {
-      const opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = "(no saved sessions yet)";
-      sel.appendChild(opt);
-      return;
-    }
-    all.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = `${s.date || ""} — ${s.name || "Untitled"} (${(s.present||[]).length} present)`;
-      sel.appendChild(opt);
-    });
-  }
-
-  // -------------------------
-  // Export / Import helpers
-  // -------------------------
-  async function exportAllSessions() {
-    const all = await dbGetAll();
-    const payload = { exportedAt: new Date().toISOString(), sessions: all };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "mahjong_splitter_backup.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  // -------------------------
-  // Events
-  // -------------------------
-  function bindEvents() {
-    $("itemSplitMode").onchange = () => {
-      const isCustom = $("itemSplitMode").value === "custom";
-      $("customSplitWrap").style.display = isCustom ? "block" : "none";
-      if (isCustom) {
-        customSplitSet = new Set([...present]);
-        renderCustomSplitChips();
-      }
-    };
-
-    $("addItemBtn").onclick = () => {
-      if (!present.size) return alert("No one is marked present.");
-      const desc = $("itemDesc").value.trim();
-      const cents = parseMoneyToCents($("itemAmount").value);
-      const paidBy = $("itemPaidBy").value;
-
-      if (!paidBy) return alert("Pick who paid.");
-      if (cents === null || cents <= 0) return alert("Enter a valid amount (e.g. 24.30).");
-
-      const splitAmong = ($("itemSplitMode").value === "custom")
-        ? [...customSplitSet].filter(n => present.has(n))
-        : [...present];
-
-      if (!splitAmong.length) return alert("No one selected to split among.");
-
-      items.push({ id: uuid(), desc, cents, paidBy, splitAmong });
-      $("itemDesc").value = "";
-      $("itemAmount").value = "";
-      renderItemsTable();
-      recalc();
-    };
-
-    $("clearItemBtn").onclick = () => {
-      $("itemDesc").value = "";
-      $("itemAmount").value = "";
-    };
-
-    $("addMjBtn").onclick = () => {
-      const from = $("mjLoser").value;
-      const to = $("mjWinner").value;
-      const cents = parseMoneyToCents($("mjAmount").value);
-
-      if (!from || !to) return alert("Pick loser and winner.");
-      if (from === to) return alert("Loser and winner cannot be the same.");
-      if (cents === null || cents <= 0) return alert("Enter a valid amount (e.g. 20.00).");
-
-      mj.push({ id: uuid(), from, to, cents });
-      $("mjAmount").value = "";
-      renderMjTable();
-      recalc();
-    };
-
-    $("mjMultiQuick").onchange = () => {
-      const v = $("mjMultiQuick").value;
-      if (v === "reset") {
-        mjLosersSet = new Set();
-        mjWinnersSet = new Set();
-      } else if (v === "allWinners") {
-        mjWinnersSet = new Set([...present]);
-        mjLosersSet.forEach(n => mjWinnersSet.delete(n));
-      } else if (v === "allLosers") {
-        mjLosersSet = new Set([...present]);
-        mjWinnersSet.forEach(n => mjLosersSet.delete(n));
-      }
-      $("mjMultiQuick").value = "none";
-      renderMjLosersChips();
-      renderMjWinnersChips();
-    };
-
-    $("addMjMultiBtn").onclick = () => {
-      const totalCents = parseMoneyToCents($("mjMultiTotal").value);
-      if (totalCents === null || totalCents <= 0) return alert("Enter a valid total amount.");
-
-      const losers = [...mjLosersSet].filter(n => present.has(n));
-      const winners = [...mjWinnersSet].filter(n => present.has(n));
-
-      if (!losers.length) return alert("Pick at least 1 loser (payer).");
-      if (!winners.length) return alert("Pick at least 1 winner (receiver).");
-
-      const overlap = losers.filter(n => winners.includes(n));
-      if (overlap.length) return alert("A person cannot be both loser and winner in the same multi split.");
-
-      addMultiLosersToWinners(totalCents, losers, winners);
-
-      $("mjMultiTotal").value = "";
-      mjLosersSet = new Set();
-      mjWinnersSet = new Set();
-      renderMjLosersChips();
-      renderMjWinnersChips();
-
-      renderMjTable();
-      recalc();
-    };
-
-    $("saveSessionBtn").onclick = async () => {
-      const s = getSessionObj();
-      await dbPut(s);
-      currentSessionId = s.id;
-      $("deleteSessionBtn").disabled = false;
-      await refreshHistory();
-      alert("Saved locally ✅");
-    };
-
-    $("newSessionBtn").onclick = () => {
-      if (confirm("Start a new session? (Current unsaved changes will be lost)")) newSession();
-    };
-
-    $("loadSessionBtn").onclick = async () => {
-      const id = $("historySelect").value;
-      if (!id) return;
-      const s = await dbGet(id);
-      if (!s) return alert("Could not load that session.");
-      loadSessionObj(s);
-    };
-
-    $("deleteSessionBtn").onclick = async () => {
-      if (!currentSessionId) return;
-      if (!confirm("Delete this saved session from this device?")) return;
-      await dbDelete(currentSessionId);
-      currentSessionId = null;
-      $("deleteSessionBtn").disabled = true;
-      await refreshHistory();
-      alert("Deleted ✅");
-      newSession();
-    };
-
-    $("addPersonBtn").onclick = () => {
-      const name = $("newPersonName").value.trim();
-      if (!name) return;
-      if (people.some(p => p.toLowerCase() === name.toLowerCase())) return alert("Name already exists.");
-      people.push(name);
-      $("newPersonName").value = "";
-      present.add(name);
-      customSplitSet.add(name);
-      renderPeopleChips();
-      renderSelectOptions();
-      renderCustomSplitChips();
-      renderMjLosersChips();
-      renderMjWinnersChips();
-      recalc();
-    };
-
-    $("exportBtn").onclick = exportAllSessions;
-    $("importBtn").onclick = () => $("importFile").click();
-
-    $("importFile").onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      let data;
-      try { data = JSON.parse(text); } catch { return alert("Invalid JSON file."); }
-      const sessions = data?.sessions;
-      if (!Array.isArray(sessions)) return alert("JSON missing sessions array.");
-      for (const s of sessions) {
-        if (s && s.id) await dbPut(s);
-      }
-      await refreshHistory();
-      alert("Imported ✅");
-      e.target.value = "";
-    };
-
-    $("copyLinkBtn").onclick = async () => {
-      const msg =
-`This HTML app won’t run properly inside Telegram/WhatsApp preview (they block storage/JS).
-Best options:
-1) Open in Safari (Share → Open in Browser) then Add to Home Screen.
-2) Host it (GitHub Pages/Cloudflare Pages) and open the link.
-3) Use a local server app (a-Shell mini) and open http://localhost:8080/mahjong.html
-Always export JSON as backup.`;
-      try {
-        await navigator.clipboard.writeText(msg);
-        alert("Copied help steps ✅");
-      } catch {
-        alert(msg);
-      }
-    };
-
-    $("exportNowBtn").onclick = exportAllSessions;
-  }
-
-  // -------------------------
-  // Init
-  // -------------------------
-  async function init() {
-    // Show banner if in-app browser detected
-    if (detectInAppBrowser()) {
-      $("inappBanner").style.display = "block";
+    let among=null,weights=null;
+    if(curMode==='equal'){
+      among=[...eqSet].filter(n=>present.has(n));
+      if(!among.length)return toast('Select at least one person','err');
+    }else if(curMode==='custom'){
+      among=[...cusSet].filter(n=>present.has(n));
+      if(!among.length)return toast('Select at least one person','err');
+    }else if(curMode==='percent'){
+      const pl=[...present].sort();
+      const tot=pl.reduce((s,n)=>s+(pctMap[n]||0),0);
+      if(tot!==100)return toast('Percentages must sum to 100%','err');
+      weights={};pl.forEach(n=>{if((pctMap[n]||0)>0)weights[n]=pctMap[n]});
+      if(!Object.keys(weights).length)return toast('Assign at least one person','err');
+    }else if(curMode==='appetite'){
+      weights={};[...present].sort().forEach(n=>weights[n]=appMap[n]||3);
     }
 
-    // DB
-    try {
-      db = await openDB();
-      $("dbStatus").textContent = "DB: IndexedDB ready (local storage).";
-    } catch (err) {
-      $("dbStatus").textContent = "DB ERROR: IndexedDB not available (common in chat-app preview).";
-      // still allow usage (no history), but warn user
-      $("inappBanner").style.display = "block";
+    items.push({id:uuid(),desc:desc||'Item',cents,paidBy,mode:curMode,among,weights});
+    $('itemDesc').value='';$('itemAmt').value='';
+    renderItems();recalc();
+    toast('Item added!','ok',1600);
+  };
+
+  $('clrItemBtn').onclick=()=>{$('itemDesc').value='';$('itemAmt').value=''};
+  $('itemDesc').onkeydown=e=>{if(e.key==='Enter')$('itemAmt').focus()};
+
+  // Delete items/mj (delegated)
+  $('itemsList').onclick=e=>{
+    const b=e.target.closest('.del-item');if(!b)return;
+    items=items.filter(x=>x.id!==b.dataset.id);renderItems();recalc();
+  };
+  $('mjList').onclick=e=>{
+    const b=e.target.closest('.del-mj');if(!b)return;
+    mj=mj.filter(x=>x.id!==b.dataset.id);renderMj();recalc();
+  };
+
+  // Add MJ single
+  $('addMjBtn').onclick=()=>{
+    const from=$('mjLoser').value,to=$('mjWinner').value;
+    const cents=parseCents($('mjAmt').value);
+    if(!from||!to)return toast('Pick loser and winner','err');
+    if(from===to)return toast('Must be different people','err');
+    if(!cents||cents<=0)return toast('Enter a valid amount','err');
+    mj.push({id:uuid(),from,to,cents});
+    $('mjAmt').value='';renderMj();recalc();toast('Transfer added!','ok',1600);
+  };
+
+  // MJ multi chips
+  $('mjLosChips').onclick=e=>{
+    const c=e.target.closest('[data-mlos]');if(!c)return;
+    const nm=c.dataset.mlos;mjLos.has(nm)?mjLos.delete(nm):mjLos.add(nm);
+    if(mjLos.has(nm))mjWin.delete(nm);
+    renderMjChips();
+  };
+  $('mjWinChips').onclick=e=>{
+    const c=e.target.closest('[data-mwin]');if(!c)return;
+    const nm=c.dataset.mwin;mjWin.has(nm)?mjWin.delete(nm):mjWin.add(nm);
+    if(mjWin.has(nm))mjLos.delete(nm);
+    renderMjChips();
+  };
+
+  // Add MJ multi
+  $('addMjMultiBtn').onclick=()=>{
+    const cents=parseCents($('mjMultiAmt').value);
+    if(!cents||cents<=0)return toast('Enter a valid total','err');
+    const los=[...mjLos].filter(n=>present.has(n));
+    const win=[...mjWin].filter(n=>present.has(n));
+    if(!los.length)return toast('Pick at least 1 loser','err');
+    if(!win.length)return toast('Pick at least 1 winner','err');
+    if(los.some(n=>win.includes(n)))return toast("Can't be both loser & winner",'err');
+    addMultiSplit(cents,los,win);
+    $('mjMultiAmt').value='';mjLos=new Set();mjWin=new Set();
+    renderMjChips();renderMj();recalc();toast('Multi-split added!','ok');
+  };
+  $('rstMjBtn').onclick=()=>{mjLos=new Set();mjWin=new Set();renderMjChips()};
+
+  // Person grid (delegation)
+  $('personGrid').onclick=e=>{
+    const card=e.target.closest('[data-name]');if(!card)return;
+    const nm=card.dataset.name;
+    if(present.has(nm)){present.delete(nm);eqSet.delete(nm);cusSet.delete(nm);mjLos.delete(nm);mjWin.delete(nm)}
+    else{present.add(nm);eqSet.add(nm);cusSet.add(nm)}
+    renderAll();recalc();
+  };
+
+  // Add person
+  $('addPersonBtn').onclick=()=>{
+    const nm=$('newName').value.trim();if(!nm)return;
+    if(people.some(p=>p.toLowerCase()===nm.toLowerCase()))return toast('Name already exists','warn');
+    people.push(nm);present.add(nm);eqSet.add(nm);cusSet.add(nm);
+    pctMap[nm]=Math.floor(100/present.size);appMap[nm]=3;
+    $('newName').value='';renderAll();recalc();toast(`${nm} added!`,'ok',1600);
+  };
+  $('newName').onkeydown=e=>{if(e.key==='Enter')$('addPersonBtn').click()};
+
+  // Save / new / load / delete
+  $('saveBtn').onclick=async()=>{
+    const s=getSessObj();await dbPut(s);sessId=s.id;$('delSessBtn').disabled=false;
+    await refreshHist();toast('Session saved!','ok');
+  };
+  $('newSessBtn').onclick=()=>{if(confirm('Start new session? Unsaved changes lost.'))newSess()};
+  $('loadBtn').onclick=async()=>{
+    const id=$('histSel').value;if(!id)return;
+    const s=await dbGet(id);if(!s)return toast('Could not load','err');
+    loadSessObj(s);goTab('session');toast(`Loaded: ${s.name}`,'ok');
+  };
+  $('delSessBtn').onclick=async()=>{
+    if(!sessId||!confirm('Delete this session?'))return;
+    await dbDel(sessId);sessId=null;$('delSessBtn').disabled=true;
+    await refreshHist();newSess();toast('Deleted','warn');
+  };
+  $('expBtn').onclick=exportAll;
+  $('impBtn').onclick=()=>$('impFile').click();
+  $('impFile').onchange=async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    try{
+      const data=JSON.parse(await file.text());
+      const sessions=data?.sessions;
+      if(!Array.isArray(sessions))return toast('Invalid backup','err');
+      for(const s of sessions)if(s?.id)await dbPut(s);
+      await refreshHist();toast(`Imported ${sessions.length} sessions!`,'ok');
+    }catch{toast('Invalid JSON file','err')}
+    e.target.value='';
+  };
+
+  // Micro toggle
+  mkToggle($('microTog'),false);
+  $('microTog').addEventListener('change',()=>{
+    ignoreMicro=$('microTog').isOn();renderItems();recalc();
+  });
+  $('microAmt').oninput=()=>{
+    const c=parseCents($('microAmt').value);
+    if(c!==null){microCents=c;renderItems();recalc();}
+  };
+
+  // Scanner
+  $('upZone').onclick=()=>$('rcpFile').click();
+  $('rcpFile').onchange=e=>{const f=e.target.files?.[0];if(f)startScan(f);e.target.value=''};
+  $('upZone').ondragover=e=>{e.preventDefault();$('upZone').classList.add('dv')};
+  $('upZone').ondragleave=()=>$('upZone').classList.remove('dv');
+  $('upZone').ondrop=e=>{e.preventDefault();$('upZone').classList.remove('dv');const f=e.dataTransfer.files?.[0];if(f)startScan(f)};
+
+  // Assign UI (delegation)
+  document.addEventListener('click',e=>{
+    const ac=e.target.closest('[data-aidx]');
+    if(ac){
+      const idx=Number(ac.dataset.aidx),nm=ac.dataset.anm;
+      scanned[idx].by.has(nm)?scanned[idx].by.delete(nm):scanned[idx].by.add(nm);
+      ac.classList.toggle('on',scanned[idx].by.has(nm));return;
     }
+  });
+  document.addEventListener('change',e=>{
+    if(e.target.classList.contains('scan-desc')){scanned[Number(e.target.dataset.idx)].desc=e.target.value}
+    if(e.target.classList.contains('scan-amt')){const c=parseCents(e.target.value);if(c&&c>0)scanned[Number(e.target.dataset.idx)].cents=c}
+  });
+  $('importBtn2').onclick=importScanned;
+  $('cancelScanBtn').onclick=()=>{scanned=[];$('assignSec').style.display='none'};
 
-    people = [...DEFAULT_PEOPLE];
-    present = new Set([...people]);
-    $("sessionDate").value = new Date().toISOString().slice(0,10);
+  // WhatsApp / Copy
+  $('waBtn').onclick=()=>{$('waPre').textContent=genWa();$('waModal').classList.add('on')};
+  $('waCloseBtn').onclick=()=>$('waModal').classList.remove('on');
+  $('waModal').onclick=e=>{if(e.target===$('waModal'))$('waModal').classList.remove('on')};
+  $('waCpBtn').onclick=async()=>{
+    try{await navigator.clipboard.writeText(genWa());toast('Copied!','ok');$('waModal').classList.remove('on')}
+    catch{toast('Copy failed — try manually','err')}
+  };
+  $('cpBtn').onclick=async()=>{
+    try{await navigator.clipboard.writeText(genWa());toast('Copied to clipboard!','ok')}
+    catch{toast('Copy failed','err')}
+  };
+}
 
-    customSplitSet = new Set([...present]);
+// ──── INIT ────
+async function init(){
+  if(isIAB())$('iabBanner').style.display='block';
 
-    renderPeopleChips();
-    renderSelectOptions();
-    renderCustomSplitChips();
-    renderMjLosersChips();
-    renderMjWinnersChips();
-    renderItemsTable();
-    renderMjTable();
-    recalc();
-
-    bindEvents();
-    try { await refreshHistory(); } catch {}
+  try{
+    db=await openDB();
+    $('dbStat').textContent='IndexedDB ✓';$('dbStat').className='stval tag tg';
+  }catch{
+    $('dbStat').textContent='Unavailable';$('dbStat').className='stval tag tr';
+    $('iabBanner').style.display='block';
   }
 
-  init();
+  $('sessDate').value=new Date().toISOString().slice(0,10);
+  eqSet=new Set([...present]);cusSet=new Set([...present]);
+  const pl=[...present];
+  pl.forEach(n=>{pctMap[n]=Math.floor(100/pl.length);appMap[n]=3});
+
+  bindEvents();
+  renderAll();
+  recalc();
+  try{await refreshHist()}catch{}
+}
+
+init();
 })();
 </script>
 </body>
